@@ -18,13 +18,13 @@ async function vouchGetRole(userId) {
   return data.role;
 }
 
-// Redirects to login.html if not signed in; redirects to `wrongRoleRedirect`
+// Redirects to login if not signed in; redirects to `wrongRoleRedirect`
 // if signed in but the profile role doesn't match `expectedRole`.
 // Returns the session on success, or null (after redirecting) otherwise.
 async function vouchRequireRole(expectedRole, wrongRoleRedirect) {
   const session = await vouchGetSession();
   if (!session) {
-    window.location.href = 'login.html';
+    window.location.href = 'login';
     return null;
   }
   const role = await vouchGetRole(session.user.id);
@@ -37,5 +37,5 @@ async function vouchRequireRole(expectedRole, wrongRoleRedirect) {
 
 async function vouchLogout() {
   await sb.auth.signOut();
-  window.location.href = 'login.html';
+  window.location.href = 'login';
 }

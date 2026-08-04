@@ -43,7 +43,7 @@
 <body class="antialiased flex items-center justify-center px-6 py-16">
   <main class="w-full">
     <div class="text-center mb-8">
-      <a href="../index.html" class="inline-flex items-center gap-2.5">
+      <a href="../" class="inline-flex items-center gap-2.5">
         <img src="../brand_assets/logo-mark.png" alt="Vouch SoCal" class="h-14 w-auto object-contain">
         <span class="font-semibold text-2xl tracking-tight text-white">Vouch SoCal</span>
       </a>
@@ -74,7 +74,7 @@
     </div>
 
     <p class="text-center text-white/60 text-xs mt-8">
-      <a href="../index.html" class="underline hover:text-white">&larr; Back to vouchltd.com</a>
+      <a href="../" class="underline hover:text-white">&larr; Back to vouchltd.com</a>
     </p>
   </main>
 
@@ -101,7 +101,7 @@
       const session = await vouchGetSession();
       if (session) {
         const role = await vouchGetRole(session.user.id);
-        window.location.href = role === 'admin' ? 'admin.html' : 'dashboard.html';
+        window.location.href = role === 'admin' ? 'admin' : 'dashboard';
       }
     })();
 
@@ -125,7 +125,7 @@
       }
 
       const role = await vouchGetRole(data.user.id);
-      window.location.href = role === 'admin' ? 'admin.html' : 'dashboard.html';
+      window.location.href = role === 'admin' ? 'admin' : 'dashboard';
     });
 
     document.getElementById('forgot-link').addEventListener('click', async (e) => {
@@ -136,7 +136,7 @@
         return;
       }
       const { error } = await sb.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + window.location.pathname.replace('login.html', 'reset-password.html'),
+        redirectTo: window.location.origin + '/portal/reset-password',
       });
       if (error) {
         showError('Could not send reset email. Please email vouch.limited@gmail.com for help.');

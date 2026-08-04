@@ -34,7 +34,7 @@
 <body class="antialiased min-h-screen">
   <header class="bg-[#1F3A2E] text-[#F5F1E8]">
     <div class="max-w-4xl mx-auto px-6 py-5 flex items-center justify-between">
-      <a href="../index.html" class="flex items-center gap-2.5">
+      <a href="../" class="flex items-center gap-2.5">
         <img src="../brand_assets/logo-mark.png" alt="Vouch SoCal" class="h-9 w-auto object-contain">
         <span class="font-semibold text-lg">Vouch SoCal</span>
       </a>
@@ -113,7 +113,7 @@
     }
 
     (async function init() {
-      const session = await vouchRequireRole('client', 'admin.html');
+      const session = await vouchRequireRole('client', 'admin');
       if (!session) return;
 
       const userId = session.user.id;
