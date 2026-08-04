@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Your Dashboard — Vouch</title>
+<title>Your Dashboard — Vouch SoCal</title>
 <meta name="description" content="View your Google Business Profile performance, billing, and manage your account.">
-<link rel="icon" type="image/png" href="../brand_assets/logo.png">
+<link rel="icon" type="image/png" href="../brand_assets/favicon.png">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
@@ -15,40 +15,40 @@
     font-weight: 100 900; font-style: normal; font-display: swap;
   }
   :root { color-scheme: light; }
-  body { background: #F2EBE3; font-family: 'Inter', sans-serif; color: #22201B; }
-  .card { background: #FFFFFF; border-radius: 16px; box-shadow: 0 1px 2px rgba(42,45,46,0.06), 0 12px 28px -12px rgba(45,95,63,0.15); }
-  .bar-track { height: 10px; border-radius: 999px; background: #E7E1D8; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 999px; background: #2D5F3F; }
-  .btn-primary { background: #2D5F3F; color: #fff; }
-  .btn-primary:hover:not(:disabled) { background: #234A33; }
+  body { background: #F5F1E8; font-family: 'Inter', sans-serif; color: #1B2620; }
+  .card { background: #FCFBF7; border-radius: 16px; box-shadow: 0 1px 2px rgba(42,45,46,0.06), 0 12px 28px -12px rgba(45,95,63,0.15); }
+  .bar-track { height: 10px; border-radius: 999px; background: #E7E1D3; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 999px; background: #2E4B3F; }
+  .btn-primary { background: #CF9640; color: #3D2A08; }
+  .btn-primary:hover:not(:disabled) { background: #B8822F; }
   .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-  .btn-secondary { border: 1.5px solid #2D5F3F; color: #2D5F3F; background: transparent; }
-  .btn-secondary:hover { background: #2D5F3F; color: #fff; }
-  a:focus-visible, button:focus-visible, textarea:focus-visible { outline: 2px solid #A87F2A; outline-offset: 2px; }
+  .btn-secondary { border: 1.5px solid #2E4B3F; color: #2E4B3F; background: transparent; }
+  .btn-secondary:hover { background: #2E4B3F; color: #fff; }
+  a:focus-visible, button:focus-visible, textarea:focus-visible { outline: 2px solid #CF9640; outline-offset: 2px; }
   .status-pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-  .status-active { background: #E4F0E6; color: #2D5F3F; }
-  .status-pending { background: #F6E9DC; color: #A87F2A; }
+  .status-active { background: #E4F0E6; color: #2E4B3F; }
+  .status-pending { background: #F6E9DC; color: #CF9640; }
   .status-cancelled { background: #F3E1DC; color: #A6432E; }
 </style>
 </head>
 <body class="antialiased min-h-screen">
-  <header class="bg-[#262626] text-[#F2EBE3]">
+  <header class="bg-[#1F3A2E] text-[#F5F1E8]">
     <div class="max-w-4xl mx-auto px-6 py-5 flex items-center justify-between">
       <a href="../index.html" class="flex items-center gap-2.5">
-        <img src="../brand_assets/logo.png" alt="Vouch" class="h-8 w-8 object-contain">
-        <span class="font-semibold text-lg">Vouch</span>
+        <img src="../brand_assets/logo-mark.png" alt="Vouch SoCal" class="h-9 w-auto object-contain">
+        <span class="font-semibold text-lg">Vouch SoCal</span>
       </a>
-      <button id="logout-btn" class="text-sm text-[#F2EBE3]/80 hover:text-[#F2EBE3] underline">Log out</button>
+      <button id="logout-btn" class="text-sm text-[#F5F1E8]/80 hover:text-[#F5F1E8] underline">Log out</button>
     </div>
   </header>
 
   <main class="max-w-4xl mx-auto px-6 py-10" id="main">
-    <div id="loading" class="text-center py-20 text-[#22201B]/60">Loading your dashboard...</div>
+    <div id="loading" class="text-center py-20 text-[#1B2620]/60">Loading your dashboard...</div>
 
     <div id="content" class="hidden">
       <div class="flex items-center justify-between flex-wrap gap-3 mb-8">
         <div>
-          <p class="text-xs uppercase tracking-[0.15em] text-[#2D5F3F] font-semibold mb-1">Welcome back</p>
+          <p class="text-xs uppercase tracking-[0.15em] text-[#2E4B3F] font-semibold mb-1">Welcome back</p>
           <h1 class="text-3xl font-semibold tracking-tight" id="business-name">—</h1>
         </div>
         <span class="status-pill" id="account-status">—</span>
@@ -56,28 +56,28 @@
 
       <section class="card p-6 sm:p-8 mb-6">
         <h2 class="text-lg font-semibold mb-5">Profile Performance</h2>
-        <div id="stats-empty" class="hidden text-sm text-[#22201B]/60">No performance data yet — your first report will appear here after your initial audit.</div>
+        <div id="stats-empty" class="hidden text-sm text-[#1B2620]/60">No performance data yet — your first report will appear here after your initial audit.</div>
         <div id="stats-list" class="space-y-6"></div>
       </section>
 
       <section class="card p-6 sm:p-8 mb-6">
         <h2 class="text-lg font-semibold mb-1">Billing</h2>
-        <p class="text-sm text-[#22201B]/60 mb-5">Payments aren't processed through this portal — this is a summary only.</p>
+        <p class="text-sm text-[#1B2620]/60 mb-5">Payments aren't processed through this portal — this is a summary only.</p>
         <dl class="grid sm:grid-cols-2 gap-5 text-sm">
           <div>
-            <dt class="text-[#22201B]/50 mb-1">Plan</dt>
+            <dt class="text-[#1B2620]/50 mb-1">Plan</dt>
             <dd class="font-medium" id="billing-plan">—</dd>
           </div>
           <div>
-            <dt class="text-[#22201B]/50 mb-1">Add-ons</dt>
+            <dt class="text-[#1B2620]/50 mb-1">Add-ons</dt>
             <dd class="font-medium" id="billing-addons">—</dd>
           </div>
           <div>
-            <dt class="text-[#22201B]/50 mb-1">Monthly amount</dt>
+            <dt class="text-[#1B2620]/50 mb-1">Monthly amount</dt>
             <dd class="font-medium" id="billing-amount">—</dd>
           </div>
           <div>
-            <dt class="text-[#22201B]/50 mb-1">Next billing date</dt>
+            <dt class="text-[#1B2620]/50 mb-1">Next billing date</dt>
             <dd class="font-medium" id="billing-next-date">—</dd>
           </div>
         </dl>
@@ -86,8 +86,8 @@
       <section class="card p-6 sm:p-8">
         <h2 class="text-lg font-semibold mb-2">Cancellation</h2>
         <div id="cancel-region" aria-live="polite">
-          <p class="text-sm text-[#22201B]/70 mb-4">Want to cancel? Send us a notice below and we'll follow up to confirm your effective end date.</p>
-          <textarea id="cancel-reason" rows="3" placeholder="Optional: let us know why (helps us improve)" class="w-full border border-[#D7D9D6] rounded-lg p-3 text-sm mb-4"></textarea>
+          <p class="text-sm text-[#1B2620]/70 mb-4">Want to cancel? Send us a notice below and we'll follow up to confirm your effective end date.</p>
+          <textarea id="cancel-reason" rows="3" placeholder="Optional: let us know why (helps us improve)" class="w-full border border-[#D9DFDA] rounded-lg p-3 text-sm mb-4"></textarea>
           <button id="cancel-btn" class="btn-secondary rounded-full px-6 py-2.5 text-sm font-semibold">Request Cancellation</button>
         </div>
       </section>
@@ -156,7 +156,7 @@
           wrap.innerHTML = `
             <div class="flex items-center justify-between mb-2">
               <span class="text-sm font-medium">${s.period_label}</span>
-              <span class="text-sm text-[#22201B]/60">${s.rating ?? '—'}★ · ${s.review_count ?? 0} reviews · ${s.response_rate ?? '—'}% responded</span>
+              <span class="text-sm text-[#1B2620]/60">${s.rating ?? '—'}★ · ${s.review_count ?? 0} reviews · ${s.response_rate ?? '—'}% responded</span>
             </div>
             <div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, Number(s.response_rate) || 0)}%"></div></div>
           `;
@@ -168,7 +168,7 @@
       // Cancellation
       const cancelRegion = document.getElementById('cancel-region');
       if (pendingCancel) {
-        cancelRegion.innerHTML = `<p class="text-sm text-[#A87F2A] font-medium">Cancellation requested on ${fmtDate(pendingCancel.created_at.slice(0,10))}. We'll follow up to confirm your effective end date — no further action needed.</p>`;
+        cancelRegion.innerHTML = `<p class="text-sm text-[#CF9640] font-medium">Cancellation requested on ${fmtDate(pendingCancel.created_at.slice(0,10))}. We'll follow up to confirm your effective end date — no further action needed.</p>`;
       } else {
         document.getElementById('cancel-btn').addEventListener('click', async () => {
           const btn = document.getElementById('cancel-btn');
@@ -182,7 +182,7 @@
             alert('Something went wrong — please email vouch.limited@gmail.com directly.');
             return;
           }
-          cancelRegion.innerHTML = `<p class="text-sm text-[#A87F2A] font-medium">We've received your cancellation request. We'll follow up to confirm your effective end date — no further action needed.</p>`;
+          cancelRegion.innerHTML = `<p class="text-sm text-[#CF9640] font-medium">We've received your cancellation request. We'll follow up to confirm your effective end date — no further action needed.</p>`;
         });
       }
 
