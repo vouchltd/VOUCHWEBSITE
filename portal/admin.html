@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Vouch</title>
+<meta name="description" content="Vouch internal admin panel: manage clients, billing, performance stats, and cancellation requests.">
+<link rel="icon" type="image/png" href="../brand_assets/logo.png">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  @font-face {
+    font-family: 'Inter';
+    src: url('../Inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900; font-style: normal; font-display: swap;
+  }
+  :root { color-scheme: light; }
+  body { background: #F2EBE3; font-family: 'Inter', sans-serif; color: #22201B; }
+  .card { background: #FFFFFF; border-radius: 16px; box-shadow: 0 1px 2px rgba(42,45,46,0.06), 0 12px 28px -12px rgba(45,95,63,0.15); }
+  .input, select, textarea {
+    display: block; width: 100%; border: 1px solid #D7D9D6; border-radius: 8px;
+    padding: 10px 12px; font-size: 14px; background: #FFFFFF; color: #22201B; font-family: inherit;
+  }
+  .input:focus, select:focus, textarea:focus { outline: none; border: 2px solid #2D5F3F; padding: 9px 11px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .btn-primary { background: #2D5F3F; color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: #234A33; }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-secondary { border: 1.5px solid #2D5F3F; color: #2D5F3F; background: transparent; }
+  .btn-secondary:hover { background: #2D5F3F; color: #fff; }
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid #A87F2A; outline-offset: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #6B7280; padding: 8px 10px; border-bottom: 1px solid #E7E1D8; }
+  td { padding: 10px; border-bottom: 1px solid #F0EBE3; }
+  tr.client-row { cursor: pointer; }
+  tr.client-row:hover { background: #FAF7F2; }
+  .status-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .status-active { background: #E4F0E6; color: #2D5F3F; }
+  .status-pending { background: #F6E9DC; color: #A87F2A; }
+  .status-cancelled { background: #F3E1DC; color: #A6432E; }
+  .tab-btn { padding: 8px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #6B7280; }
+  .tab-btn.active { background: #2D5F3F; color: #fff; }
+</style>
+</head>
+<body class="antialiased min-h-screen">
+  <header class="bg-[#262626] text-[#F2EBE3]">
+    <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+      <a href="../index.html" class="flex items-center gap-2.5">
+        <img src="../brand_assets/logo.png" alt="Vouch" class="h-8 w-8 object-contain">
+        <span class="font-semibold text-lg">Vouch Admin</span>
+      </a>
+      <button id="logout-btn" class="text-sm text-[#F2EBE3]/80 hover:text-[#F2EBE3] underline">Log out</button>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-10">
+    <div id="loading" class="text-center py-20 text-[#22201B]/60">Loading admin panel...</div>
+    <div id="denied" class="hidden text-center py-20 text-[#A6432E] font-medium">You don't have admin access.</div>
+
+    <div id="content" class="hidden">
+      <div class="flex gap-2 mb-8" role="tablist">
+        <button class="tab-btn active" data-tab="clients" role="tab">Clients</button>
+        <button class="tab-btn" data-tab="cancellations" role="tab">Cancellation Requests <span id="cancel-badge"></span></button>
+      </div>
+
+      <!-- CLIENTS TAB -->
+      <section id="tab-clients">
+        <div class="card p-6 mb-6">
+          <h2 class="text-lg font-semibold mb-4">Add New Client</h2>
+          <form id="new-client-form" class="grid sm:grid-cols-2 gap-4">
+            <div><label for="nc-email">Client Email (their login)</label><input class="input" type="email" id="nc-email" required></div>
+            <div><label for="nc-business">Business Name</label><input class="input" type="text" id="nc-business" required></div>
+            <div><label for="nc-category">Category</label><input class="input" type="text" id="nc-category"></div>
+            <div><label for="nc-phone">Phone</label><input class="input" type="tel" id="nc-phone"></div>
+            <div class="sm:col-span-2"><label for="nc-address">Address</label><input class="input" type="text" id="nc-address"></div>
+            <div><label for="nc-amount">Monthly Amount ($, optional)</label><input class="input" type="number" step="0.01" id="nc-amount"></div>
+            <div><label for="nc-nextdate">Next Billing Date</label><input class="input" type="date" id="nc-nextdate"></div>
+            <div class="sm:col-span-2 flex items-center justify-between mt-2">
+              <p class="text-xs text-[#22201B]/50 max-w-md">The client will receive an email to set their own portal password.</p>
+              <button type="submit" class="btn-primary rounded-full px-6 py-2.5 text-sm font-semibold" id="nc-submit">Add Client</button>
+            </div>
+            <p class="sm:col-span-2 text-sm hidden" id="nc-msg" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+
+        <div class="card p-6">
+          <h2 class="text-lg font-semibold mb-4">All Clients</h2>
+          <div class="overflow-x-auto">
+            <table>
+              <thead><tr><th>Business</th><th>Status</th><th>Next Billing</th><th>Monthly</th></tr></thead>
+              <tbody id="clients-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- CLIENT DETAIL / EDIT -->
+        <div class="card p-6 mt-6 hidden" id="client-detail">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-semibold" id="detail-business-name">—</h2>
+            <button id="detail-close" class="text-sm text-[#22201B]/50 hover:text-[#22201B]">Close</button>
+          </div>
+
+          <form id="billing-form" class="grid sm:grid-cols-2 gap-4 mb-8 pb-8 border-b border-[#F0EBE3]">
+            <input type="hidden" id="bf-client-id">
+            <h3 class="sm:col-span-2 text-sm font-semibold text-[#2D5F3F] uppercase tracking-wide">Billing</h3>
+            <div><label for="bf-amount">Monthly Amount ($)</label><input class="input" type="number" step="0.01" id="bf-amount"></div>
+            <div><label for="bf-nextdate">Next Billing Date</label><input class="input" type="date" id="bf-nextdate"></div>
+            <div>
+              <label for="bf-status">Account Status</label>
+              <select class="input" id="bf-status">
+                <option value="active">Active</option>
+                <option value="pending_cancellation">Pending Cancellation</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div><label for="bf-addons">Add-on Platforms (comma separated)</label><input class="input" type="text" id="bf-addons" placeholder="Yelp, Facebook"></div>
+            <div class="sm:col-span-2"><button type="submit" class="btn-primary rounded-full px-6 py-2.5 text-sm font-semibold">Save Billing</button></div>
+          </form>
+
+          <form id="stats-form" class="grid sm:grid-cols-3 gap-4">
+            <input type="hidden" id="sf-client-id">
+            <h3 class="sm:col-span-3 text-sm font-semibold text-[#2D5F3F] uppercase tracking-wide">Add Performance Report</h3>
+            <div><label for="sf-period">Period Label</label><input class="input" type="text" id="sf-period" placeholder="e.g. Aug 2026" required></div>
+            <div><label for="sf-rating">Rating</label><input class="input" type="number" step="0.1" min="0" max="5" id="sf-rating"></div>
+            <div><label for="sf-reviews">Total Reviews</label><input class="input" type="number" id="sf-reviews"></div>
+            <div><label for="sf-new">New Reviews (period)</label><input class="input" type="number" id="sf-new"></div>
+            <div><label for="sf-response">Response Rate (%)</label><input class="input" type="number" min="0" max="100" id="sf-response"></div>
+            <div><label for="sf-views">Profile Views</label><input class="input" type="number" id="sf-views"></div>
+            <div class="sm:col-span-3"><button type="submit" class="btn-secondary rounded-full px-6 py-2.5 text-sm font-semibold">Add Report</button></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- CANCELLATIONS TAB -->
+      <section id="tab-cancellations" class="hidden">
+        <div class="card p-6">
+          <h2 class="text-lg font-semibold mb-4">Cancellation Requests</h2>
+          <div class="overflow-x-auto">
+            <table>
+              <thead><tr><th>Business</th><th>Requested</th><th>Reason</th><th>Status</th><th></th></tr></thead>
+              <tbody id="cancellations-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="supabase-client.js"></script>
+  <script>
+    const STATUS_CLASS = { active: 'status-active', pending_cancellation: 'status-pending', cancelled: 'status-cancelled' };
+    let clientsCache = [];
+
+    function fmtDate(d) {
+      if (!d) return '—';
+      return new Date(d.length === 10 ? d + 'T00:00:00' : d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    async function loadClients() {
+      const { data: clients } = await sb.from('clients').select('*').order('business_name');
+      const { data: billingRows } = await sb.from('billing').select('*');
+      const billingByClient = {};
+      (billingRows || []).forEach((b) => { billingByClient[b.client_id] = b; });
+      clientsCache = (clients || []).map((c) => ({ ...c, billing: billingByClient[c.id] || null }));
+
+      const tbody = document.getElementById('clients-tbody');
+      tbody.innerHTML = '';
+      clientsCache.forEach((c) => {
+        const tr = document.createElement('tr');
+        tr.className = 'client-row';
+        tr.dataset.id = c.id;
+        tr.innerHTML = `
+          <td class="font-medium">${c.business_name}</td>
+          <td><span class="status-pill ${STATUS_CLASS[c.status] || 'status-active'}">${c.status}</span></td>
+          <td>${fmtDate(c.billing?.next_billing_date)}</td>
+          <td>${c.billing?.monthly_amount != null ? '$' + Number(c.billing.monthly_amount).toFixed(2) : 'Quoted after audit'}</td>
+        `;
+        tr.addEventListener('click', () => openClientDetail(c.id));
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openClientDetail(clientId) {
+      const c = clientsCache.find((x) => x.id === clientId);
+      if (!c) return;
+      document.getElementById('client-detail').classList.remove('hidden');
+      document.getElementById('detail-business-name').textContent = c.business_name;
+      document.getElementById('bf-client-id').value = c.id;
+      document.getElementById('sf-client-id').value = c.id;
+      document.getElementById('bf-amount').value = c.billing?.monthly_amount ?? '';
+      document.getElementById('bf-nextdate').value = c.billing?.next_billing_date ?? '';
+      document.getElementById('bf-status').value = c.status ?? 'active';
+      document.getElementById('bf-addons').value = (c.billing?.addon_platforms || []).join(', ');
+      document.getElementById('client-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('detail-close').addEventListener('click', () => {
+      document.getElementById('client-detail').classList.add('hidden');
+    });
+
+    document.getElementById('billing-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const clientId = document.getElementById('bf-client-id').value;
+      const amount = document.getElementById('bf-amount').value;
+      const nextDate = document.getElementById('bf-nextdate').value;
+      const status = document.getElementById('bf-status').value;
+      const addons = document.getElementById('bf-addons').value.split(',').map((s) => s.trim()).filter(Boolean);
+
+      await sb.from('clients').update({ status }).eq('id', clientId);
+
+      const { data: existing } = await sb.from('billing').select('id').eq('client_id', clientId).maybeSingle();
+      const payload = {
+        client_id: clientId,
+        monthly_amount: amount === '' ? null : Number(amount),
+        next_billing_date: nextDate || null,
+        addon_platforms: addons,
+        status,
+        updated_at: new Date().toISOString(),
+      };
+      if (existing) {
+        await sb.from('billing').update(payload).eq('id', existing.id);
+      } else {
+        await sb.from('billing').insert(payload);
+      }
+      await loadClients();
+      openClientDetail(clientId);
+      alert('Billing saved.');
+    });
+
+    document.getElementById('stats-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const clientId = document.getElementById('sf-client-id').value;
+      const payload = {
+        client_id: clientId,
+        period_label: document.getElementById('sf-period').value.trim(),
+        rating: document.getElementById('sf-rating').value || null,
+        review_count: document.getElementById('sf-reviews').value || null,
+        new_reviews: document.getElementById('sf-new').value || null,
+        response_rate: document.getElementById('sf-response').value || null,
+        profile_views: document.getElementById('sf-views').value || null,
+      };
+      const { error } = await sb.from('performance_stats').insert(payload);
+      if (error) { alert('Could not save report: ' + error.message); return; }
+      document.getElementById('stats-form').reset();
+      alert('Performance report added.');
+    });
+
+    document.getElementById('new-client-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('nc-submit');
+      const msg = document.getElementById('nc-msg');
+      btn.disabled = true;
+      btn.textContent = 'Adding...';
+      msg.classList.add('hidden');
+
+      const session = await vouchGetSession();
+      const body = {
+        email: document.getElementById('nc-email').value.trim(),
+        business_name: document.getElementById('nc-business').value.trim(),
+        category: document.getElementById('nc-category').value.trim() || null,
+        address: document.getElementById('nc-address').value.trim() || null,
+        phone: document.getElementById('nc-phone').value.trim() || null,
+        monthly_amount: document.getElementById('nc-amount').value || null,
+        next_billing_date: document.getElementById('nc-nextdate').value || null,
+      };
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/create-client`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify(body),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Unknown error');
+        msg.textContent = 'Client added — they\'ll receive an email to set their password.';
+        msg.className = 'sm:col-span-2 text-sm text-[#2D5F3F]';
+        msg.classList.remove('hidden');
+        document.getElementById('new-client-form').reset();
+        await loadClients();
+      } catch (err) {
+        msg.textContent = 'Error: ' + err.message;
+        msg.className = 'sm:col-span-2 text-sm text-[#A6432E]';
+        msg.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Add Client';
+      }
+    });
+
+    async function loadCancellations() {
+      const { data: requests } = await sb.from('cancellation_requests').select('*, clients(business_name)').order('created_at', { ascending: false });
+      const tbody = document.getElementById('cancellations-tbody');
+      tbody.innerHTML = '';
+      const pendingCount = (requests || []).filter((r) => r.status === 'pending').length;
+      document.getElementById('cancel-badge').textContent = pendingCount > 0 ? `(${pendingCount})` : '';
+
+      (requests || []).forEach((r) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="font-medium">${r.clients?.business_name || '—'}</td>
+          <td>${fmtDate(r.created_at)}</td>
+          <td class="max-w-xs">${r.reason || '—'}</td>
+          <td><span class="status-pill ${r.status === 'pending' ? 'status-pending' : 'status-active'}">${r.status}</span></td>
+          <td></td>
+        `;
+        if (r.status !== 'completed') {
+          const actionTd = tr.lastElementChild;
+          const nextStatus = r.status === 'pending' ? 'acknowledged' : 'completed';
+          const label = r.status === 'pending' ? 'Acknowledge' : 'Mark Complete';
+          const btn = document.createElement('button');
+          btn.className = 'btn-secondary rounded-full px-4 py-1.5 text-xs font-semibold';
+          btn.textContent = label;
+          btn.addEventListener('click', async () => {
+            await sb.from('cancellation_requests').update({ status: nextStatus }).eq('id', r.id);
+            await loadCancellations();
+          });
+          actionTd.appendChild(btn);
+        }
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-clients').classList.toggle('hidden', btn.dataset.tab !== 'clients');
+        document.getElementById('tab-cancellations').classList.toggle('hidden', btn.dataset.tab !== 'cancellations');
+      });
+    });
+
+    (async function init() {
+      const session = await vouchRequireRole('admin', 'dashboard.html');
+      if (!session) return;
+      await Promise.all([loadClients(), loadCancellations()]);
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('content').classList.remove('hidden');
+    })();
+
+    document.getElementById('logout-btn').addEventListener('click', vouchLogout);
+  </script>
+</body>
+</html>

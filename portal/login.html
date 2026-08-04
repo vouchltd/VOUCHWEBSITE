@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Login — Vouch</title>
+<meta name="description" content="Log in to your Vouch client portal to view your profile performance, billing, and request cancellation.">
+<link rel="icon" type="image/png" href="../brand_assets/logo.png">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  @font-face {
+    font-family: 'Inter';
+    src: url('../Inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900; font-style: normal; font-display: swap;
+  }
+  :root { color-scheme: light; }
+  body { background: #496A4D; font-family: 'Inter', sans-serif; min-height: 100vh; }
+  .card {
+    max-width: 420px; margin: 0 auto; background: #FFFFFF; border-radius: 16px;
+    padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  }
+  .field { margin-bottom: 18px; }
+  .label { display: block; color: #6B7280; font-size: 13px; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .input {
+    display: block; width: 100%; border: 1px solid #D7D9D6; border-radius: 8px;
+    padding: 12px 14px; font-size: 15px; background: #FFFFFF; color: #22201B;
+    font-family: inherit; transition: border-color 0.15s ease;
+  }
+  .input:focus { outline: none; border: 2px solid #2D5F3F; padding: 11px 13px; }
+  .submit {
+    width: 100%; padding: 14px; border-radius: 8px; border: none; cursor: pointer;
+    margin-top: 8px; font-size: 15px; font-weight: 700; background: #2D5F3F; color: #FFFFFF;
+    font-family: inherit; transition: background-color 0.15s ease;
+  }
+  .submit:hover:not(:disabled) { background: #234A33; }
+  .submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  .msg-error { color: #A6432E; font-size: 13px; margin-top: 12px; text-align: center; }
+  .msg-info { color: #2D5F3F; font-size: 13px; margin-top: 12px; text-align: center; }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid #A87F2A; outline-offset: 2px; }
+</style>
+</head>
+<body class="antialiased flex items-center justify-center px-6 py-16">
+  <main class="w-full">
+    <div class="text-center mb-8">
+      <a href="../index.html" class="inline-flex items-center gap-2.5">
+        <img src="../brand_assets/logo.png" alt="Vouch" class="h-9 w-9 object-contain">
+        <span class="font-semibold text-2xl tracking-tight text-white">Vouch</span>
+      </a>
+      <p class="text-white/80 text-sm mt-2">Client Portal</p>
+    </div>
+
+    <div class="card">
+      <h1 class="text-xl font-semibold text-[#22201B] mb-1">Log in to your account</h1>
+      <p class="text-sm text-[#6B7280] mb-6">View your stats, billing, and manage your account.</p>
+
+      <form id="login-form" novalidate>
+        <div class="field">
+          <label class="label" for="email">Email</label>
+          <input class="input" type="email" id="email" name="email" required autocomplete="username">
+        </div>
+        <div class="field">
+          <label class="label" for="password">Password</label>
+          <input class="input" type="password" id="password" name="password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="submit" id="submit-btn">Log In</button>
+        <p class="msg-error hidden" id="error-msg" role="alert" aria-live="assertive"></p>
+      </form>
+
+      <p class="text-center text-sm mt-5">
+        <a href="#" id="forgot-link" class="text-[#2D5F3F] underline">Forgot your password?</a>
+      </p>
+      <p class="msg-info hidden" id="info-msg" role="status" aria-live="polite"></p>
+    </div>
+
+    <p class="text-center text-white/60 text-xs mt-8">
+      <a href="../index.html" class="underline hover:text-white">&larr; Back to vouchltd.com</a>
+    </p>
+  </main>
+
+  <script src="supabase-client.js"></script>
+  <script>
+    const form = document.getElementById('login-form');
+    const errorMsg = document.getElementById('error-msg');
+    const infoMsg = document.getElementById('info-msg');
+    const submitBtn = document.getElementById('submit-btn');
+
+    function showError(text) {
+      errorMsg.textContent = text;
+      errorMsg.classList.remove('hidden');
+      infoMsg.classList.add('hidden');
+    }
+    function showInfo(text) {
+      infoMsg.textContent = text;
+      infoMsg.classList.remove('hidden');
+      errorMsg.classList.add('hidden');
+    }
+
+    // If already logged in, route based on role.
+    (async () => {
+      const session = await vouchGetSession();
+      if (session) {
+        const role = await vouchGetRole(session.user.id);
+        window.location.href = role === 'admin' ? 'admin.html' : 'dashboard.html';
+      }
+    })();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.classList.add('hidden');
+      infoMsg.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Logging in...';
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        showError('Incorrect email or password. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Log In';
+        return;
+      }
+
+      const role = await vouchGetRole(data.user.id);
+      window.location.href = role === 'admin' ? 'admin.html' : 'dashboard.html';
+    });
+
+    document.getElementById('forgot-link').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      if (!email) {
+        showError('Enter your email above first, then click "Forgot your password?" again.');
+        return;
+      }
+      const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname.replace('login.html', 'reset-password.html'),
+      });
+      if (error) {
+        showError('Could not send reset email. Please email vouch.limited@gmail.com for help.');
+      } else {
+        showInfo('If an account exists for that email, a password reset link has been sent.');
+      }
+    });
+  </script>
+</body>
+</html>

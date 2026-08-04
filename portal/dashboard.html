@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Dashboard — Vouch</title>
+<meta name="description" content="View your Google Business Profile performance, billing, and manage your account.">
+<link rel="icon" type="image/png" href="../brand_assets/logo.png">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  @font-face {
+    font-family: 'Inter';
+    src: url('../Inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900; font-style: normal; font-display: swap;
+  }
+  :root { color-scheme: light; }
+  body { background: #F2EBE3; font-family: 'Inter', sans-serif; color: #22201B; }
+  .card { background: #FFFFFF; border-radius: 16px; box-shadow: 0 1px 2px rgba(42,45,46,0.06), 0 12px 28px -12px rgba(45,95,63,0.15); }
+  .bar-track { height: 10px; border-radius: 999px; background: #E7E1D8; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 999px; background: #2D5F3F; }
+  .btn-primary { background: #2D5F3F; color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: #234A33; }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-secondary { border: 1.5px solid #2D5F3F; color: #2D5F3F; background: transparent; }
+  .btn-secondary:hover { background: #2D5F3F; color: #fff; }
+  a:focus-visible, button:focus-visible, textarea:focus-visible { outline: 2px solid #A87F2A; outline-offset: 2px; }
+  .status-pill { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .status-active { background: #E4F0E6; color: #2D5F3F; }
+  .status-pending { background: #F6E9DC; color: #A87F2A; }
+  .status-cancelled { background: #F3E1DC; color: #A6432E; }
+</style>
+</head>
+<body class="antialiased min-h-screen">
+  <header class="bg-[#262626] text-[#F2EBE3]">
+    <div class="max-w-4xl mx-auto px-6 py-5 flex items-center justify-between">
+      <a href="../index.html" class="flex items-center gap-2.5">
+        <img src="../brand_assets/logo.png" alt="Vouch" class="h-8 w-8 object-contain">
+        <span class="font-semibold text-lg">Vouch</span>
+      </a>
+      <button id="logout-btn" class="text-sm text-[#F2EBE3]/80 hover:text-[#F2EBE3] underline">Log out</button>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-6 py-10" id="main">
+    <div id="loading" class="text-center py-20 text-[#22201B]/60">Loading your dashboard...</div>
+
+    <div id="content" class="hidden">
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-8">
+        <div>
+          <p class="text-xs uppercase tracking-[0.15em] text-[#2D5F3F] font-semibold mb-1">Welcome back</p>
+          <h1 class="text-3xl font-semibold tracking-tight" id="business-name">—</h1>
+        </div>
+        <span class="status-pill" id="account-status">—</span>
+      </div>
+
+      <section class="card p-6 sm:p-8 mb-6">
+        <h2 class="text-lg font-semibold mb-5">Profile Performance</h2>
+        <div id="stats-empty" class="hidden text-sm text-[#22201B]/60">No performance data yet — your first report will appear here after your initial audit.</div>
+        <div id="stats-list" class="space-y-6"></div>
+      </section>
+
+      <section class="card p-6 sm:p-8 mb-6">
+        <h2 class="text-lg font-semibold mb-1">Billing</h2>
+        <p class="text-sm text-[#22201B]/60 mb-5">Payments aren't processed through this portal — this is a summary only.</p>
+        <dl class="grid sm:grid-cols-2 gap-5 text-sm">
+          <div>
+            <dt class="text-[#22201B]/50 mb-1">Plan</dt>
+            <dd class="font-medium" id="billing-plan">—</dd>
+          </div>
+          <div>
+            <dt class="text-[#22201B]/50 mb-1">Add-ons</dt>
+            <dd class="font-medium" id="billing-addons">—</dd>
+          </div>
+          <div>
+            <dt class="text-[#22201B]/50 mb-1">Monthly amount</dt>
+            <dd class="font-medium" id="billing-amount">—</dd>
+          </div>
+          <div>
+            <dt class="text-[#22201B]/50 mb-1">Next billing date</dt>
+            <dd class="font-medium" id="billing-next-date">—</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="card p-6 sm:p-8">
+        <h2 class="text-lg font-semibold mb-2">Cancellation</h2>
+        <div id="cancel-region" aria-live="polite">
+          <p class="text-sm text-[#22201B]/70 mb-4">Want to cancel? Send us a notice below and we'll follow up to confirm your effective end date.</p>
+          <textarea id="cancel-reason" rows="3" placeholder="Optional: let us know why (helps us improve)" class="w-full border border-[#D7D9D6] rounded-lg p-3 text-sm mb-4"></textarea>
+          <button id="cancel-btn" class="btn-secondary rounded-full px-6 py-2.5 text-sm font-semibold">Request Cancellation</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="error-state" class="hidden text-center py-20">
+      <p class="text-[#A6432E] font-medium">We couldn't load your account. Please refresh, or email vouch.limited@gmail.com.</p>
+    </div>
+  </main>
+
+  <script src="supabase-client.js"></script>
+  <script>
+    const STATUS_LABEL = { active: 'Active', pending_cancellation: 'Cancellation Pending', cancelled: 'Cancelled' };
+    const STATUS_CLASS = { active: 'status-active', pending_cancellation: 'status-pending', cancelled: 'status-cancelled' };
+
+    function fmtDate(d) {
+      if (!d) return 'Not scheduled';
+      return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    function fmtMoney(n) {
+      if (n === null || n === undefined) return 'Quoted after audit';
+      return '$' + Number(n).toFixed(2) + ' / mo';
+    }
+
+    (async function init() {
+      const session = await vouchRequireRole('client', 'admin.html');
+      if (!session) return;
+
+      const userId = session.user.id;
+
+      const [{ data: client, error: clientErr }, { data: billing }, { data: stats }, { data: pendingCancel }] = await Promise.all([
+        sb.from('clients').select('*').eq('id', userId).single(),
+        sb.from('billing').select('*').eq('client_id', userId).order('updated_at', { ascending: false }).limit(1).maybeSingle(),
+        sb.from('performance_stats').select('*').eq('client_id', userId).order('recorded_at', { ascending: false }).limit(6),
+        sb.from('cancellation_requests').select('*').eq('client_id', userId).in('status', ['pending', 'acknowledged']).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      ]);
+
+      if (clientErr || !client) {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('error-state').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('business-name').textContent = client.business_name;
+      const statusEl = document.getElementById('account-status');
+      statusEl.textContent = STATUS_LABEL[client.status] || client.status;
+      statusEl.className = 'status-pill ' + (STATUS_CLASS[client.status] || 'status-active');
+
+      // Billing
+      if (billing) {
+        document.getElementById('billing-plan').textContent = billing.plan_name || 'Management';
+        document.getElementById('billing-addons').textContent = (billing.addon_platforms && billing.addon_platforms.length) ? billing.addon_platforms.join(', ') : 'None';
+        document.getElementById('billing-amount').textContent = fmtMoney(billing.monthly_amount);
+        document.getElementById('billing-next-date').textContent = fmtDate(billing.next_billing_date);
+      } else {
+        document.getElementById('billing-plan').textContent = 'Not yet set up';
+      }
+
+      // Performance stats
+      const statsList = document.getElementById('stats-list');
+      if (!stats || stats.length === 0) {
+        document.getElementById('stats-empty').classList.remove('hidden');
+      } else {
+        stats.forEach((s) => {
+          const wrap = document.createElement('div');
+          wrap.innerHTML = `
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium">${s.period_label}</span>
+              <span class="text-sm text-[#22201B]/60">${s.rating ?? '—'}★ · ${s.review_count ?? 0} reviews · ${s.response_rate ?? '—'}% responded</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.min(100, Number(s.response_rate) || 0)}%"></div></div>
+          `;
+          wrap.className = 'mb-2';
+          statsList.appendChild(wrap);
+        });
+      }
+
+      // Cancellation
+      const cancelRegion = document.getElementById('cancel-region');
+      if (pendingCancel) {
+        cancelRegion.innerHTML = `<p class="text-sm text-[#A87F2A] font-medium">Cancellation requested on ${fmtDate(pendingCancel.created_at.slice(0,10))}. We'll follow up to confirm your effective end date — no further action needed.</p>`;
+      } else {
+        document.getElementById('cancel-btn').addEventListener('click', async () => {
+          const btn = document.getElementById('cancel-btn');
+          btn.disabled = true;
+          btn.textContent = 'Sending...';
+          const reason = document.getElementById('cancel-reason').value.trim();
+          const { error } = await sb.from('cancellation_requests').insert({ client_id: userId, reason: reason || null });
+          if (error) {
+            btn.disabled = false;
+            btn.textContent = 'Request Cancellation';
+            alert('Something went wrong — please email vouch.limited@gmail.com directly.');
+            return;
+          }
+          cancelRegion.innerHTML = `<p class="text-sm text-[#A87F2A] font-medium">We've received your cancellation request. We'll follow up to confirm your effective end date — no further action needed.</p>`;
+        });
+      }
+
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('content').classList.remove('hidden');
+    })();
+
+    document.getElementById('logout-btn').addEventListener('click', vouchLogout);
+  </script>
+</body>
+</html>
