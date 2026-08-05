@@ -598,12 +598,11 @@
   <div id="cookie-banner" class="hidden" role="dialog" aria-label="Cookie notice" aria-describedby="cookie-banner-text">
     <div class="max-w-6xl mx-auto px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <p id="cookie-banner-text" class="text-sm leading-relaxed text-oat/90 max-w-2xl">
-        We use a small number of essential cookies to run this site and keep you signed in to the client portal. We don't use advertising or tracking cookies. See our
+        We only use essential cookies to run this site and keep you signed in to the client portal. We don't use tracking or advertising cookies, and we don't sell your data, so there's no option to opt out of anything that doesn't exist. See our
         <a href="privacy-policy#cookies" class="underline hover:text-oat">Cookie Policy</a> for details.
       </p>
       <div class="flex gap-3 shrink-0">
-        <button id="cookie-decline" type="button" class="btn-secondary rounded-full px-5 py-2.5 text-sm font-semibold" style="border-color: rgba(245,241,232,0.4); color: #F5F1E8;">Essential only</button>
-        <button id="cookie-accept" type="button" class="btn-primary rounded-full px-5 py-2.5 text-sm font-semibold">Accept</button>
+        <button id="cookie-accept" type="button" class="btn-primary rounded-full px-5 py-2.5 text-sm font-semibold">Got it</button>
       </div>
     </div>
   </div>
@@ -613,16 +612,13 @@
     (function () {
       const banner = document.getElementById('cookie-banner');
       const accept = document.getElementById('cookie-accept');
-      const decline = document.getElementById('cookie-decline');
       if (!banner) return;
       const stored = localStorage.getItem('vouch_cookie_consent');
       if (!stored) banner.classList.remove('hidden');
-      function dismiss(value) {
-        localStorage.setItem('vouch_cookie_consent', value);
+      accept.addEventListener('click', () => {
+        localStorage.setItem('vouch_cookie_consent', 'acknowledged');
         banner.classList.add('hidden');
-      }
-      accept.addEventListener('click', () => dismiss('accepted'));
-      decline.addEventListener('click', () => dismiss('essential-only'));
+      });
     })();
 
     // scroll reveal
