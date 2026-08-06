@@ -94,8 +94,10 @@
     </div>
 
     <div id="error-state" class="hidden text-center py-20">
-      <p class="text-[#A6432E] font-medium">We couldn't load your account. Please refresh, or email vouch.limited@gmail.com.</p>
+      <p class="text-[#A6432E] font-medium">We couldn't load your account. Please refresh, or email vouchsocal@gmail.com.</p>
     </div>
+
+    <p class="text-center text-[#1B2620]/40 text-[0.7rem] mt-10">Vouch SoCal is a subsidiary of Lens and Ladder. Vouch SoCal is owned, operated, and overseen by Lens and Ladder.</p>
   </main>
 
   <script src="supabase-client.js"></script>
@@ -179,7 +181,7 @@
           if (error) {
             btn.disabled = false;
             btn.textContent = 'Request Cancellation';
-            alert('Something went wrong — please email vouch.limited@gmail.com directly.');
+            alert('Something went wrong — please email vouchsocal@gmail.com directly.');
             return;
           }
           cancelRegion.innerHTML = `<p class="text-sm text-[#CF9640] font-medium">We've received your cancellation request. We'll follow up to confirm your effective end date — no further action needed.</p>`;

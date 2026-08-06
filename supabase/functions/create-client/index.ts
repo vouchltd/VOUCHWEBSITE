@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
   // Without redirectTo, Supabase sends the client to the bare site_url
   // (the homepage) instead of the password-set page, so the invite link
   // looks like it "does nothing."
-  const redirectTo = `${Deno.env.get('PORTAL_SITE_URL') ?? 'https://www.vouchltd.com'}/portal/reset-password`;
+  const redirectTo = `${Deno.env.get('PORTAL_SITE_URL') ?? 'https://www.vouchsocal.com'}/portal/reset-password`;
   const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo });
   if (inviteErr || !invited?.user) {
     return json({ error: inviteErr?.message || 'Could not create client login' }, 400);
