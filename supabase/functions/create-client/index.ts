@@ -88,5 +88,38 @@ Deno.serve(async (req) => {
   });
   if (billingInsertErr) return json({ error: billingInsertErr.message }, 400);
 
-  return json({ ok: true, id: newUserId });
+  // Send the onboarding contract via DocuSeal. Best-effort and one-shot:
+  // this only ever fires here, at account creation, never again in the
+  // client's lifetime (e.g. not on cancellation), so a failure here should
+  // not block the account from being created — just get logged for admin
+  // to follow up on manually.
+  const DOCUSEAL_API_KEY = Deno.env.get('DOCUSEAL_API_KEY');
+  const DOCUSEAL_TEMPLATE_ID = Deno.env.get('DOCUSEAL_TEMPLATE_ID') || '5375399';
+  let contractSent = false;
+  if (DOCUSEAL_API_KEY) {
+    try {
+      const docusealRes = await fetch('https://api.docuseal.com/submissions', {
+        method: 'POST',
+        headers: {
+          'X-Auth-Token': DOCUSEAL_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          template_id: Number(DOCUSEAL_TEMPLATE_ID),
+          send_email: true,
+          submitters: [{ role: 'First Party', email, name: businessName }],
+        }),
+      });
+      contractSent = docusealRes.ok;
+      if (!docusealRes.ok) {
+        console.error('DocuSeal submission failed:', await docusealRes.text());
+      }
+    } catch (err) {
+      console.error('DocuSeal submission error:', err);
+    }
+  } else {
+    console.log('DOCUSEAL_API_KEY not configured — skipping contract send.');
+  }
+
+  return json({ ok: true, id: newUserId, contract_sent: contractSent });
 });
