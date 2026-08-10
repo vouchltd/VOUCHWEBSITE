@@ -70,14 +70,14 @@
           <h2 class="text-lg font-semibold mb-4">Add New Client</h2>
           <form id="new-client-form" class="grid sm:grid-cols-2 gap-4">
             <div><label for="nc-email">Client Email (their login)</label><input class="input" type="email" id="nc-email" required></div>
-            <div><label for="nc-business">Business Name</label><input class="input" type="text" id="nc-business" required></div>
-            <div><label for="nc-category">Category</label><input class="input" type="text" id="nc-category"></div>
-            <div><label for="nc-phone">Phone</label><input class="input" type="tel" id="nc-phone"></div>
-            <div class="sm:col-span-2"><label for="nc-address">Address</label><input class="input" type="text" id="nc-address"></div>
+            <div><label for="nc-business">Business Name (optional)</label><input class="input" type="text" id="nc-business"></div>
+            <div><label for="nc-category">Category (optional)</label><input class="input" type="text" id="nc-category"></div>
+            <div><label for="nc-phone">Phone (optional)</label><input class="input" type="tel" id="nc-phone"></div>
+            <div class="sm:col-span-2"><label for="nc-address">Address (optional)</label><input class="input" type="text" id="nc-address"></div>
             <div><label for="nc-amount">Monthly Amount ($, optional)</label><input class="input" type="number" step="0.01" id="nc-amount"></div>
-            <div><label for="nc-nextdate">Next Billing Date</label><input class="input" type="date" id="nc-nextdate"></div>
+            <div><label for="nc-nextdate">Next Billing Date (optional)</label><input class="input" type="date" id="nc-nextdate"></div>
             <div class="sm:col-span-2 flex items-center justify-between mt-2">
-              <p class="text-xs text-[#1B2620]/50 max-w-md">The client will receive an email to set their own portal password.</p>
+              <p class="text-xs text-[#1B2620]/50 max-w-md">Only email is required to onboard. The client will receive an email to set their portal password and sign their contract — fill in the rest once it's signed and returned.</p>
               <button type="submit" class="btn-primary rounded-full px-6 py-2.5 text-sm font-semibold" id="nc-submit">Add Client</button>
             </div>
             <p class="sm:col-span-2 text-sm hidden" id="nc-msg" role="status" aria-live="polite"></p>
@@ -100,6 +100,16 @@
             <h2 class="text-lg font-semibold" id="detail-business-name">—</h2>
             <button id="detail-close" class="text-sm text-[#1B2620]/50 hover:text-[#1B2620]">Close</button>
           </div>
+
+          <form id="business-form" class="grid sm:grid-cols-2 gap-4 mb-8 pb-8 border-b border-[#F0EAE0]">
+            <input type="hidden" id="biz-client-id">
+            <h3 class="sm:col-span-2 text-sm font-semibold text-[#2E4B3F] uppercase tracking-wide">Business Info</h3>
+            <div><label for="biz-business">Business Name</label><input class="input" type="text" id="biz-business"></div>
+            <div><label for="biz-category">Category</label><input class="input" type="text" id="biz-category"></div>
+            <div><label for="biz-phone">Phone</label><input class="input" type="tel" id="biz-phone"></div>
+            <div class="sm:col-span-2"><label for="biz-address">Address</label><input class="input" type="text" id="biz-address"></div>
+            <div class="sm:col-span-2"><button type="submit" class="btn-primary rounded-full px-6 py-2.5 text-sm font-semibold">Save Business Info</button></div>
+          </form>
 
           <form id="billing-form" class="grid sm:grid-cols-2 gap-4 mb-8 pb-8 border-b border-[#F0EAE0]">
             <input type="hidden" id="bf-client-id">
@@ -188,7 +198,7 @@
         tr.className = 'client-row';
         tr.dataset.id = c.id;
         tr.innerHTML = `
-          <td class="font-medium">${c.business_name}</td>
+          <td class="font-medium">${c.business_name || '<span class="text-[#1B2620]/40 font-normal">(pending)</span>'}</td>
           <td><span class="status-pill ${STATUS_CLASS[c.status] || 'status-active'}">${c.status}</span></td>
           <td>${fmtDate(c.billing?.next_billing_date)}</td>
           <td>${c.billing?.monthly_amount != null ? '$' + Number(c.billing.monthly_amount).toFixed(2) : 'Quoted after audit'}</td>
@@ -202,7 +212,12 @@
       const c = clientsCache.find((x) => x.id === clientId);
       if (!c) return;
       document.getElementById('client-detail').classList.remove('hidden');
-      document.getElementById('detail-business-name').textContent = c.business_name;
+      document.getElementById('detail-business-name').textContent = c.business_name || '(pending)';
+      document.getElementById('biz-client-id').value = c.id;
+      document.getElementById('biz-business').value = c.business_name || '';
+      document.getElementById('biz-category').value = c.category || '';
+      document.getElementById('biz-phone').value = c.phone || '';
+      document.getElementById('biz-address').value = c.address || '';
       document.getElementById('bf-client-id').value = c.id;
       document.getElementById('sf-client-id').value = c.id;
       document.getElementById('bf-amount').value = c.billing?.monthly_amount ?? '';
@@ -214,6 +229,21 @@
 
     document.getElementById('detail-close').addEventListener('click', () => {
       document.getElementById('client-detail').classList.add('hidden');
+    });
+
+    document.getElementById('business-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const clientId = document.getElementById('biz-client-id').value;
+      const { error } = await sb.from('clients').update({
+        business_name: document.getElementById('biz-business').value.trim() || null,
+        category: document.getElementById('biz-category').value.trim() || null,
+        phone: document.getElementById('biz-phone').value.trim() || null,
+        address: document.getElementById('biz-address').value.trim() || null,
+      }).eq('id', clientId);
+      if (error) { alert('Error: ' + error.message); return; }
+      await loadClients();
+      openClientDetail(clientId);
+      alert('Business info saved.');
     });
 
     document.getElementById('billing-form').addEventListener('submit', async (e) => {

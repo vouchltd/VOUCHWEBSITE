@@ -50,10 +50,10 @@ Deno.serve(async (req) => {
   }
 
   const email = String(body.email || '').trim();
-  const businessName = String(body.business_name || '').trim();
-  if (!email || !businessName) {
-    return json({ error: 'email and business_name are required' }, 400);
+  if (!email) {
+    return json({ error: 'email is required' }, 400);
   }
+  const businessName = String(body.business_name || '').trim() || null;
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           template_id: Number(DOCUSEAL_TEMPLATE_ID),
           send_email: true,
-          submitters: [{ role: 'First Party', email, name: businessName }],
+          submitters: [{ role: 'First Party', email, name: businessName || email }],
         }),
       });
       contractSent = docusealRes.ok;

@@ -13,13 +13,18 @@ create table if not exists public.profiles (
 
 create table if not exists public.clients (
   id uuid primary key references public.profiles(id) on delete cascade,
-  business_name text not null,
+  business_name text,
   category text,
   address text,
   phone text,
   status text not null default 'active' check (status in ('active','pending_cancellation','cancelled')),
   created_at timestamptz not null default now()
 );
+
+-- business_name used to be required at signup. Onboarding now only
+-- requires an email; business details are filled in after the client's
+-- contract comes back, so this can no longer be NOT NULL.
+alter table public.clients alter column business_name drop not null;
 
 create table if not exists public.billing (
   id uuid primary key default gen_random_uuid(),

@@ -133,7 +133,7 @@
         return;
       }
 
-      document.getElementById('business-name').textContent = client.business_name;
+      document.getElementById('business-name').textContent = client.business_name || 'Account setup in progress';
       const statusEl = document.getElementById('account-status');
       statusEl.textContent = STATUS_LABEL[client.status] || client.status;
       statusEl.className = 'status-pill ' + (STATUS_CLASS[client.status] || 'status-active');
