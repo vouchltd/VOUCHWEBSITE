@@ -35,11 +35,43 @@ Deno.serve(async (req) => {
   if (userErr || !userData?.user) return json({ error: 'Not authenticated' }, 401);
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-  const { error } = await admin
+  const { data: updatedClient, error } = await admin
     .from('clients')
     .update({ contract_signed_at: new Date().toISOString() })
-    .eq('id', userData.user.id);
+    .eq('id', userData.user.id)
+    .select('business_name')
+    .single();
   if (error) return json({ error: error.message }, 400);
+
+  // Notify the team. Best-effort: the signature is already recorded above
+  // regardless of whether this send succeeds.
+  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+  if (RESEND_API_KEY) {
+    try {
+      const notifyTo = (Deno.env.get('NOTIFY_EMAIL') || 'vouchsocal@gmail.com,vouch.limited@gmail.com')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Vouch Portal <notifications@vouchsocal.com>',
+          to: notifyTo,
+          subject: `Contract signed: ${updatedClient?.business_name || userData.user.email}`,
+          text: `${updatedClient?.business_name || 'A client'} (${userData.user.email}) just signed their onboarding contract in the portal.\n\nLog in to the admin panel to review their account.`,
+        }),
+      });
+      if (!res.ok) console.error('Contract-signed notification failed:', await res.text());
+    } catch (err) {
+      console.error('Contract-signed notification error:', err);
+    }
+  } else {
+    console.log('RESEND_API_KEY not configured — skipping contract-signed notification.');
+  }
 
   return json({ ok: true });
 });
