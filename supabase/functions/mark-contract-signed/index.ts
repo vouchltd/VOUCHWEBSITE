@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
   const { data: updatedClient, error } = await admin
     .from('clients')
-    .update({ contract_signed_at: new Date().toISOString() })
+    .update({ contract_signed_at: new Date().toISOString(), contract_needs_resign: false })
     .eq('id', userData.user.id)
     .select('business_name')
     .single();

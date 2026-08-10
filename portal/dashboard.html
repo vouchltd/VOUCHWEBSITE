@@ -51,8 +51,8 @@
 
     <div id="contract-gate" class="hidden">
       <div class="text-center mb-6">
-        <h1 class="text-2xl font-semibold tracking-tight mb-2">Please review and sign your service agreement</h1>
-        <p class="text-sm text-[#1B2620]/60 max-w-md mx-auto">This is a one-time step to finish setting up your account. Your dashboard will be right here once you're done.</p>
+        <h1 class="text-2xl font-semibold tracking-tight mb-2" id="contract-gate-heading">Please review and sign your service agreement</h1>
+        <p class="text-sm text-[#1B2620]/60 max-w-md mx-auto" id="contract-gate-subheading">This is a one-time step to finish setting up your account. Your dashboard will be right here once you're done.</p>
       </div>
       <div class="card p-4 sm:p-6 max-w-2xl mx-auto">
         <div class="docuseal-wrap">
@@ -171,6 +171,8 @@
 
       const docusealSlug = client.docuseal_submission_slug;
       const contractSigned = !!client.contract_signed_at;
+      const contractNeedsResign = !!client.contract_needs_resign;
+      const needsToSign = docusealSlug && (!contractSigned || contractNeedsResign);
 
       document.getElementById('business-name').textContent = client.business_name || 'Account setup in progress';
       const statusEl = document.getElementById('account-status');
@@ -250,7 +252,11 @@
 
       document.getElementById('loading').classList.add('hidden');
 
-      if (docusealSlug && !contractSigned) {
+      if (needsToSign) {
+        if (contractNeedsResign && contractSigned) {
+          document.getElementById('contract-gate-heading').textContent = 'Please review and sign your updated service agreement';
+          document.getElementById('contract-gate-subheading').textContent = "We've made changes to our contract. Continued access requires signing the updated version.";
+        }
         document.getElementById('contract-embed-gate').setAttribute('data-src', `https://docuseal.com/s/${docusealSlug}`);
         document.getElementById('contract-gate').classList.remove('hidden');
 

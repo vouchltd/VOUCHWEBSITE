@@ -131,6 +131,15 @@
 
           <div class="mb-8 pb-8 border-b border-[#F0EAE0] flex items-center justify-between gap-4">
             <div>
+              <h3 class="text-sm font-semibold text-[#2E4B3F] uppercase tracking-wide mb-1">Contract</h3>
+              <p class="text-xs text-[#1B2620]/60 font-medium mb-1" id="contract-status-text">—</p>
+              <p class="text-xs text-[#1B2620]/50 max-w-sm">Pushes a new contract from the current template (set in Settings) and re-locks their portal until they sign it. They'll be emailed and warned that continued access requires signing, and that their membership may be cancelled if they don't.</p>
+            </div>
+            <button type="button" id="request-contract-btn" class="rounded-full px-6 py-2.5 text-sm font-semibold border border-[#CF9640] text-[#CF9640] hover:bg-[#CF9640] hover:text-white shrink-0">Require New Contract</button>
+          </div>
+
+          <div class="mb-8 pb-8 border-b border-[#F0EAE0] flex items-center justify-between gap-4">
+            <div>
               <h3 class="text-sm font-semibold text-[#A6432E] uppercase tracking-wide mb-1">Cancel Subscription</h3>
               <p class="text-xs text-[#1B2620]/50 max-w-sm">Cancels the account immediately and emails the client to let them know. Use this when a client asks to cancel some other way (phone, in person) instead of through the portal.</p>
             </div>
@@ -236,6 +245,18 @@
       const cancelBtn = document.getElementById('cancel-subscription-btn');
       cancelBtn.disabled = c.status === 'cancelled';
       cancelBtn.textContent = c.status === 'cancelled' ? 'Already Cancelled' : 'Cancel Subscription';
+
+      const contractStatusText = document.getElementById('contract-status-text');
+      if (!c.docuseal_submission_slug) {
+        contractStatusText.textContent = 'No contract on file';
+      } else if (c.contract_needs_resign) {
+        contractStatusText.textContent = 'New contract sent, awaiting signature';
+      } else if (c.contract_signed_at) {
+        contractStatusText.textContent = `Signed ${fmtDate(c.contract_signed_at)}`;
+      } else {
+        contractStatusText.textContent = 'Sent, awaiting first signature';
+      }
+
       document.getElementById('client-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -256,6 +277,35 @@
       await loadClients();
       openClientDetail(clientId);
       alert('Business info saved.');
+    });
+
+    document.getElementById('request-contract-btn').addEventListener('click', async () => {
+      const clientId = document.getElementById('biz-client-id').value;
+      if (!clientId) return;
+      const c = clientsCache.find((x) => x.id === clientId);
+      if (!confirm(`Send a new contract to ${c?.business_name || 'this client'}? Their portal will be locked behind signing it, and they'll be emailed a warning that their membership may be cancelled if they don't sign.`)) return;
+
+      const btn = document.getElementById('request-contract-btn');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      try {
+        const session = await vouchGetSession();
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/request-new-contract`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ client_id: clientId }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Unknown error');
+        if (!result.emailed) alert('New contract sent, but the client email failed to send. Follow up manually.');
+        await loadClients();
+        openClientDetail(clientId);
+      } catch (err) {
+        alert('Error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Require New Contract';
+      }
     });
 
     document.getElementById('cancel-subscription-btn').addEventListener('click', async () => {

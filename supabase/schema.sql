@@ -20,6 +20,7 @@ create table if not exists public.clients (
   status text not null default 'active' check (status in ('active','pending_cancellation','cancelled')),
   docuseal_submission_slug text,
   contract_signed_at timestamptz,
+  contract_needs_resign boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -32,6 +33,12 @@ alter table public.clients alter column business_name drop not null;
 -- sign, and shown again read-only afterward) and when they completed it.
 alter table public.clients add column if not exists docuseal_submission_slug text;
 alter table public.clients add column if not exists contract_signed_at timestamptz;
+
+-- Set when admin pushes a replacement contract to an already-signed
+-- client. Kept separate from contract_signed_at so we still know when
+-- they last signed anything, while re-gating the portal until they sign
+-- the new one.
+alter table public.clients add column if not exists contract_needs_resign boolean not null default false;
 
 create table if not exists public.billing (
   id uuid primary key default gen_random_uuid(),
