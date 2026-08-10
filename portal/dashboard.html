@@ -8,6 +8,7 @@
 <link rel="icon" type="image/png" href="../brand_assets/favicon.png">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.docuseal.com/js/form.js"></script>
 <style>
   @font-face {
     font-family: 'Inter';
@@ -44,6 +45,19 @@
 
   <main class="max-w-4xl mx-auto px-6 py-10" id="main">
     <div id="loading" class="text-center py-20 text-[#1B2620]/60">Loading your dashboard...</div>
+
+    <div id="contract-gate" class="hidden">
+      <div class="text-center mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight mb-2">Please review and sign your service agreement</h1>
+        <p class="text-sm text-[#1B2620]/60 max-w-md mx-auto">This is a one-time step to finish setting up your account. Your dashboard will be right here once you're done.</p>
+      </div>
+      <div class="card p-4 sm:p-6 max-w-2xl mx-auto">
+        <docuseal-form data-src="" id="contract-embed-gate"></docuseal-form>
+      </div>
+      <div class="text-center mt-6">
+        <button id="contract-continue-btn" class="btn-secondary rounded-full px-6 py-2.5 text-sm font-semibold hidden">Continue to your dashboard</button>
+      </div>
+    </div>
 
     <div id="content" class="hidden">
       <div class="flex items-center justify-between flex-wrap gap-3 mb-8">
@@ -83,13 +97,19 @@
         </dl>
       </section>
 
-      <section class="card p-6 sm:p-8">
+      <section class="card p-6 sm:p-8 mb-6">
         <h2 class="text-lg font-semibold mb-2">Cancellation</h2>
         <div id="cancel-region" aria-live="polite">
           <p class="text-sm text-[#1B2620]/70 mb-4">Want to cancel? Send us a notice below and we'll follow up to confirm your effective end date.</p>
           <textarea id="cancel-reason" rows="3" placeholder="Optional: let us know why (helps us improve)" class="w-full border border-[#D9DFDA] rounded-lg p-3 text-sm mb-4"></textarea>
           <button id="cancel-btn" class="btn-secondary rounded-full px-6 py-2.5 text-sm font-semibold">Request Cancellation</button>
         </div>
+      </section>
+
+      <section class="card p-6 sm:p-8 hidden" id="contract-card">
+        <h2 class="text-lg font-semibold mb-1">Your Service Agreement</h2>
+        <p class="text-sm text-[#1B2620]/60 mb-5">Signed and on file. You can review the terms anytime here.</p>
+        <docuseal-form data-src="" id="contract-embed-view"></docuseal-form>
       </section>
     </div>
 
@@ -132,6 +152,9 @@
         document.getElementById('error-state').classList.remove('hidden');
         return;
       }
+
+      const docusealSlug = client.docuseal_submission_slug;
+      const contractSigned = !!client.contract_signed_at;
 
       document.getElementById('business-name').textContent = client.business_name || 'Account setup in progress';
       const statusEl = document.getElementById('account-status');
@@ -190,8 +213,42 @@
         });
       }
 
+      // Contract: set up the read-only "view anytime" embed regardless of
+      // signed status (harmless if hidden), then decide below whether to
+      // gate the whole dashboard behind signing it first.
+      if (docusealSlug) {
+        document.getElementById('contract-embed-view').setAttribute('data-src', `https://docuseal.com/s/${docusealSlug}`);
+        if (contractSigned) document.getElementById('contract-card').classList.remove('hidden');
+      }
+
       document.getElementById('loading').classList.add('hidden');
-      document.getElementById('content').classList.remove('hidden');
+
+      if (docusealSlug && !contractSigned) {
+        document.getElementById('contract-embed-gate').setAttribute('data-src', `https://docuseal.com/s/${docusealSlug}`);
+        document.getElementById('contract-gate').classList.remove('hidden');
+
+        const markSigned = async () => {
+          try {
+            const contractSession = await vouchGetSession();
+            await fetch(`${SUPABASE_URL}/functions/v1/mark-contract-signed`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${contractSession.access_token}` },
+            });
+          } catch (err) {
+            console.error('Could not record contract signature:', err);
+          }
+          document.getElementById('contract-gate').classList.add('hidden');
+          document.getElementById('contract-card').classList.remove('hidden');
+          document.getElementById('content').classList.remove('hidden');
+        };
+
+        document.getElementById('contract-embed-gate').addEventListener('completed', markSigned);
+        const continueBtn = document.getElementById('contract-continue-btn');
+        continueBtn.classList.remove('hidden');
+        continueBtn.addEventListener('click', markSigned);
+      } else {
+        document.getElementById('content').classList.remove('hidden');
+      }
     })();
 
     document.getElementById('logout-btn').addEventListener('click', vouchLogout);

@@ -18,6 +18,8 @@ create table if not exists public.clients (
   address text,
   phone text,
   status text not null default 'active' check (status in ('active','pending_cancellation','cancelled')),
+  docuseal_submission_slug text,
+  contract_signed_at timestamptz,
   created_at timestamptz not null default now()
 );
 
@@ -25,6 +27,11 @@ create table if not exists public.clients (
 -- requires an email; business details are filled in after the client's
 -- contract comes back, so this can no longer be NOT NULL.
 alter table public.clients alter column business_name drop not null;
+
+-- The client's per-submission DocuSeal slug (embedded in the portal to
+-- sign, and shown again read-only afterward) and when they completed it.
+alter table public.clients add column if not exists docuseal_submission_slug text;
+alter table public.clients add column if not exists contract_signed_at timestamptz;
 
 create table if not exists public.billing (
   id uuid primary key default gen_random_uuid(),

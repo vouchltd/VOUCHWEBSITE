@@ -364,8 +364,8 @@
         const result = await res.json();
         if (!res.ok) throw new Error(result.error || 'Unknown error');
         msg.textContent = result.contract_sent
-          ? 'Client added — they\'ll receive an email to set their password and a contract to sign.'
-          : 'Client added — they\'ll receive an email to set their password. Contract was not sent; send it manually.';
+          ? 'Client added — they\'ll receive an email to set their password, then sign their contract right in the portal on first login.'
+          : 'Client added — they\'ll receive an email to set their password. Contract could not be created in DocuSeal; check the template ID in Settings.';
         msg.className = 'sm:col-span-2 text-sm text-[#2E4B3F]';
         msg.classList.remove('hidden');
         document.getElementById('new-client-form').reset();

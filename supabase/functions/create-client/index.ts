@@ -88,11 +88,12 @@ Deno.serve(async (req) => {
   });
   if (billingInsertErr) return json({ error: billingInsertErr.message }, 400);
 
-  // Send the onboarding contract via DocuSeal. Best-effort and one-shot:
-  // this only ever fires here, at account creation, never again in the
-  // client's lifetime (e.g. not on cancellation), so a failure here should
-  // not block the account from being created — just get logged for admin
-  // to follow up on manually.
+  // Create the onboarding contract submission in DocuSeal, without emailing
+  // it — the client signs it inline in the portal on first login instead
+  // (see dashboard.html). Best-effort and one-shot: this only ever fires
+  // here, at account creation, never again in the client's lifetime (e.g.
+  // not on cancellation), so a failure here should not block the account
+  // from being created — just get logged for admin to follow up on.
   const DOCUSEAL_API_KEY = Deno.env.get('DOCUSEAL_API_KEY');
   const { data: templateSetting } = await admin
     .from('app_settings')
@@ -100,7 +101,7 @@ Deno.serve(async (req) => {
     .eq('key', 'docuseal_template_id')
     .maybeSingle();
   const DOCUSEAL_TEMPLATE_ID = templateSetting?.value || Deno.env.get('DOCUSEAL_TEMPLATE_ID') || '5375399';
-  let contractSent = false;
+  let contractCreated = false;
   if (DOCUSEAL_API_KEY) {
     try {
       const docusealRes = await fetch('https://api.docuseal.com/submissions', {
@@ -111,20 +112,28 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           template_id: Number(DOCUSEAL_TEMPLATE_ID),
-          send_email: true,
+          send_email: false,
           submitters: [{ role: 'First Party', email, name: businessName || email }],
         }),
       });
-      contractSent = docusealRes.ok;
-      if (!docusealRes.ok) {
+      if (docusealRes.ok) {
+        const submitters = await docusealRes.json();
+        const slug = submitters?.[0]?.slug;
+        if (slug) {
+          await admin.from('clients').update({ docuseal_submission_slug: slug }).eq('id', newUserId);
+          contractCreated = true;
+        } else {
+          console.error('DocuSeal submission had no slug:', JSON.stringify(submitters));
+        }
+      } else {
         console.error('DocuSeal submission failed:', await docusealRes.text());
       }
     } catch (err) {
       console.error('DocuSeal submission error:', err);
     }
   } else {
-    console.log('DOCUSEAL_API_KEY not configured — skipping contract send.');
+    console.log('DOCUSEAL_API_KEY not configured — skipping contract creation.');
   }
 
-  return json({ ok: true, id: newUserId, contract_sent: contractSent });
+  return json({ ok: true, id: newUserId, contract_sent: contractCreated });
 });
