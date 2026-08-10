@@ -123,10 +123,19 @@
                 <option value="pending_cancellation">Pending Cancellation</option>
                 <option value="cancelled">Cancelled</option>
               </select>
+              <p class="text-xs text-[#1B2620]/40 mt-1">Changing this directly doesn't email the client. Use "Cancel Subscription" below for that.</p>
             </div>
             <div><label for="bf-addons">Add-on Platforms (comma separated)</label><input class="input" type="text" id="bf-addons" placeholder="Yelp, Facebook"></div>
             <div class="sm:col-span-2"><button type="submit" class="btn-primary rounded-full px-6 py-2.5 text-sm font-semibold">Save Billing</button></div>
           </form>
+
+          <div class="mb-8 pb-8 border-b border-[#F0EAE0] flex items-center justify-between gap-4">
+            <div>
+              <h3 class="text-sm font-semibold text-[#A6432E] uppercase tracking-wide mb-1">Cancel Subscription</h3>
+              <p class="text-xs text-[#1B2620]/50 max-w-sm">Cancels the account immediately and emails the client to let them know. Use this when a client asks to cancel some other way (phone, in person) instead of through the portal.</p>
+            </div>
+            <button type="button" id="cancel-subscription-btn" class="rounded-full px-6 py-2.5 text-sm font-semibold border border-[#A6432E] text-[#A6432E] hover:bg-[#A6432E] hover:text-white shrink-0">Cancel Subscription</button>
+          </div>
 
           <form id="stats-form" class="grid sm:grid-cols-3 gap-4">
             <input type="hidden" id="sf-client-id">
@@ -224,6 +233,9 @@
       document.getElementById('bf-nextdate').value = c.billing?.next_billing_date ?? '';
       document.getElementById('bf-status').value = c.status ?? 'active';
       document.getElementById('bf-addons').value = (c.billing?.addon_platforms || []).join(', ');
+      const cancelBtn = document.getElementById('cancel-subscription-btn');
+      cancelBtn.disabled = c.status === 'cancelled';
+      cancelBtn.textContent = c.status === 'cancelled' ? 'Already Cancelled' : 'Cancel Subscription';
       document.getElementById('client-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -244,6 +256,34 @@
       await loadClients();
       openClientDetail(clientId);
       alert('Business info saved.');
+    });
+
+    document.getElementById('cancel-subscription-btn').addEventListener('click', async () => {
+      const clientId = document.getElementById('biz-client-id').value;
+      if (!clientId) return;
+      const c = clientsCache.find((x) => x.id === clientId);
+      if (!confirm(`Cancel the subscription for ${c?.business_name || 'this client'}? This emails them immediately.`)) return;
+
+      const btn = document.getElementById('cancel-subscription-btn');
+      btn.disabled = true;
+      btn.textContent = 'Cancelling...';
+      try {
+        const session = await vouchGetSession();
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/update-cancellation-status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ client_id: clientId, new_status: 'completed', reason: 'Cancelled directly by admin' }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Unknown error');
+        if (!result.emailed) alert('Subscription cancelled, but the client email failed to send. Follow up manually.');
+        await Promise.all([loadClients(), loadCancellations()]);
+        openClientDetail(clientId);
+      } catch (err) {
+        alert('Error: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Cancel Subscription';
+      }
     });
 
     document.getElementById('billing-form').addEventListener('submit', async (e) => {

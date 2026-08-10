@@ -67,32 +67,55 @@ Deno.serve(async (req) => {
     return json({ error: 'Invalid JSON body' }, 400);
   }
 
-  const cancellationId = String(body.cancellation_id || '').trim();
+  const cancellationId = body.cancellation_id ? String(body.cancellation_id).trim() : null;
+  const clientIdDirect = body.client_id ? String(body.client_id).trim() : null;
   const newStatus = String(body.new_status || '').trim();
   const clientStatus = CLIENT_STATUS_BY_REQUEST_STATUS[newStatus];
-  if (!cancellationId || !clientStatus) {
-    return json({ error: 'cancellation_id and a valid new_status (acknowledged or completed) are required' }, 400);
+  if ((!cancellationId && !clientIdDirect) || !clientStatus) {
+    return json({ error: 'a valid new_status (acknowledged or completed), plus either cancellation_id or client_id, are required' }, 400);
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-  const { data: cancellation, error: cancellationErr } = await admin
-    .from('cancellation_requests')
-    .select('id, client_id')
-    .eq('id', cancellationId)
-    .single();
-  if (cancellationErr || !cancellation) return json({ error: 'Cancellation request not found' }, 404);
+  let targetClientId: string;
 
-  const { error: updateReqErr } = await admin
-    .from('cancellation_requests')
-    .update({ status: newStatus })
-    .eq('id', cancellationId);
-  if (updateReqErr) return json({ error: updateReqErr.message }, 400);
+  if (cancellationId) {
+    const { data: cancellation, error: cancellationErr } = await admin
+      .from('cancellation_requests')
+      .select('id, client_id')
+      .eq('id', cancellationId)
+      .single();
+    if (cancellationErr || !cancellation) return json({ error: 'Cancellation request not found' }, 404);
+
+    const { error: updateReqErr } = await admin
+      .from('cancellation_requests')
+      .update({ status: newStatus })
+      .eq('id', cancellationId);
+    if (updateReqErr) return json({ error: updateReqErr.message }, 400);
+
+    targetClientId = cancellation.client_id;
+  } else {
+    // Admin cancelling directly, with no client-submitted request on file.
+    // Still create a request row so there's a single record of every
+    // cancellation regardless of who initiated it.
+    const { data: newRequest, error: insertErr } = await admin
+      .from('cancellation_requests')
+      .insert({
+        client_id: clientIdDirect,
+        reason: (body.reason && String(body.reason).trim()) || 'Cancelled directly by admin',
+        status: newStatus,
+      })
+      .select('client_id')
+      .single();
+    if (insertErr || !newRequest) return json({ error: insertErr?.message || 'Could not record cancellation' }, 400);
+
+    targetClientId = newRequest.client_id;
+  }
 
   const { error: clientUpdateErr } = await admin
     .from('clients')
     .update({ status: clientStatus })
-    .eq('id', cancellation.client_id);
+    .eq('id', targetClientId);
   if (clientUpdateErr) return json({ error: clientUpdateErr.message }, 400);
 
   // Email the client. Best-effort: both status updates above already
@@ -101,7 +124,7 @@ Deno.serve(async (req) => {
   const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
   if (RESEND_API_KEY) {
     try {
-      const { data: authUser } = await admin.auth.admin.getUserById(cancellation.client_id);
+      const { data: authUser } = await admin.auth.admin.getUserById(targetClientId);
       const clientEmail = authUser?.user?.email;
       if (clientEmail) {
         const res = await fetch('https://api.resend.com/emails', {
@@ -120,7 +143,7 @@ Deno.serve(async (req) => {
         emailed = res.ok;
         if (!res.ok) console.error('Client status-update email failed:', await res.text());
       } else {
-        console.error('No email on file for client', cancellation.client_id);
+        console.error('No email on file for client', targetClientId);
       }
     } catch (err) {
       console.error('Client status-update email error:', err);
