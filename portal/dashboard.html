@@ -169,7 +169,9 @@
 
       // Cancellation
       const cancelRegion = document.getElementById('cancel-region');
-      if (pendingCancel) {
+      if (client.status === 'cancelled') {
+        cancelRegion.innerHTML = `<p class="text-sm text-[#1B2620]/60 font-medium">Your account has been cancelled. Reach out to vouchsocal@gmail.com if you'd like to come back.</p>`;
+      } else if (pendingCancel) {
         cancelRegion.innerHTML = `<p class="text-sm text-[#CF9640] font-medium">Cancellation requested on ${fmtDate(pendingCancel.created_at.slice(0,10))}. We'll follow up to confirm your effective end date — no further action needed.</p>`;
       } else {
         document.getElementById('cancel-btn').addEventListener('click', async () => {

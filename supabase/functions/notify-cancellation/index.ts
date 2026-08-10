@@ -15,7 +15,10 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-    const NOTIFY_TO = Deno.env.get('NOTIFY_EMAIL') || 'vouchsocal@gmail.com';
+    const NOTIFY_TO = (Deno.env.get('NOTIFY_EMAIL') || 'vouchsocal@gmail.com,vouch.limited@gmail.com')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     const { data: client } = await admin
@@ -43,7 +46,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         from: 'Vouch Portal <notifications@vouchsocal.com>',
-        to: [NOTIFY_TO],
+        to: NOTIFY_TO,
         subject: `Cancellation request: ${businessName}`,
         text: `${businessName} submitted a cancellation request through the client portal.\n\nReason: ${reason}\n\nLog in to the admin panel to acknowledge and follow up.`,
       }),

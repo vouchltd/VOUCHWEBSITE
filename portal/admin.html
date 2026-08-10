@@ -334,8 +334,26 @@
           btn.className = 'btn-secondary rounded-full px-4 py-1.5 text-xs font-semibold';
           btn.textContent = label;
           btn.addEventListener('click', async () => {
-            await sb.from('cancellation_requests').update({ status: nextStatus }).eq('id', r.id);
-            await loadCancellations();
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+            try {
+              const session = await vouchGetSession();
+              const res = await fetch(`${SUPABASE_URL}/functions/v1/update-cancellation-status`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+                body: JSON.stringify({ cancellation_id: r.id, new_status: nextStatus }),
+              });
+              const result = await res.json();
+              if (!res.ok) throw new Error(result.error || 'Unknown error');
+              if (!result.emailed) {
+                alert('Status updated, but the client email failed to send. Follow up manually.');
+              }
+              await Promise.all([loadCancellations(), loadClients()]);
+            } catch (err) {
+              alert('Error: ' + err.message);
+              btn.disabled = false;
+              btn.textContent = label;
+            }
           });
           actionTd.appendChild(btn);
         }
