@@ -144,3 +144,22 @@ create policy "cancel_insert_own" on public.cancellation_requests
 drop policy if exists "cancel_admin_update" on public.cancellation_requests;
 create policy "cancel_admin_update" on public.cancellation_requests
   for update using (public.is_admin()) with check (public.is_admin());
+
+-- Admin-editable key/value config, e.g. which DocuSeal template to send
+-- on client onboarding. Lets staff swap the contract from the admin
+-- portal without a code deploy.
+create table if not exists public.app_settings (
+  key text primary key,
+  value text,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.app_settings enable row level security;
+
+drop policy if exists "app_settings_admin_all" on public.app_settings;
+create policy "app_settings_admin_all" on public.app_settings
+  for all using (public.is_admin()) with check (public.is_admin());
+
+insert into public.app_settings (key, value)
+values ('docuseal_template_id', '5375399')
+on conflict (key) do nothing;

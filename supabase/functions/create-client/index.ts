@@ -94,7 +94,12 @@ Deno.serve(async (req) => {
   // not block the account from being created — just get logged for admin
   // to follow up on manually.
   const DOCUSEAL_API_KEY = Deno.env.get('DOCUSEAL_API_KEY');
-  const DOCUSEAL_TEMPLATE_ID = Deno.env.get('DOCUSEAL_TEMPLATE_ID') || '5375399';
+  const { data: templateSetting } = await admin
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'docuseal_template_id')
+    .maybeSingle();
+  const DOCUSEAL_TEMPLATE_ID = templateSetting?.value || Deno.env.get('DOCUSEAL_TEMPLATE_ID') || '5375399';
   let contractSent = false;
   if (DOCUSEAL_API_KEY) {
     try {

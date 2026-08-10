@@ -61,6 +61,7 @@
       <div class="flex gap-2 mb-8" role="tablist">
         <button class="tab-btn active" data-tab="clients" role="tab">Clients</button>
         <button class="tab-btn" data-tab="cancellations" role="tab">Cancellation Requests <span id="cancel-badge"></span></button>
+        <button class="tab-btn" data-tab="settings" role="tab">Settings</button>
       </div>
 
       <!-- CLIENTS TAB -->
@@ -141,6 +142,21 @@
               <tbody id="cancellations-tbody"></tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS TAB -->
+      <section id="tab-settings" class="hidden">
+        <div class="card p-6">
+          <h2 class="text-lg font-semibold mb-1">Onboarding Contract</h2>
+          <p class="text-xs text-[#1B2620]/50 mb-4 max-w-md">The DocuSeal template sent to a client's email when their portal account is created. Replace this ID if you swap in a new contract.</p>
+          <form id="contract-settings-form" class="grid sm:grid-cols-2 gap-4">
+            <div><label for="cs-template-id">DocuSeal Template ID</label><input class="input" type="text" id="cs-template-id" required></div>
+            <div class="sm:col-span-2 flex items-center gap-4">
+              <button type="submit" class="btn-primary rounded-full px-6 py-2.5 text-sm font-semibold" id="cs-submit">Save</button>
+              <p class="text-sm hidden" id="cs-msg" role="status" aria-live="polite"></p>
+            </div>
+          </form>
         </div>
       </section>
     </div>
@@ -327,19 +343,40 @@
       });
     }
 
+    async function loadContractSettings() {
+      const { data } = await sb.from('app_settings').select('value').eq('key', 'docuseal_template_id').maybeSingle();
+      document.getElementById('cs-template-id').value = data?.value || '';
+    }
+
+    document.getElementById('contract-settings-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('cs-submit');
+      const msg = document.getElementById('cs-msg');
+      const value = document.getElementById('cs-template-id').value.trim();
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+      const { error } = await sb.from('app_settings').upsert({ key: 'docuseal_template_id', value, updated_at: new Date().toISOString() });
+      btn.disabled = false;
+      btn.textContent = 'Save';
+      msg.textContent = error ? 'Error: ' + error.message : 'Saved. New clients will now receive this contract.';
+      msg.className = 'text-sm ' + (error ? 'text-[#A6432E]' : 'text-[#2E4B3F]');
+      msg.classList.remove('hidden');
+    });
+
     document.querySelectorAll('.tab-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById('tab-clients').classList.toggle('hidden', btn.dataset.tab !== 'clients');
         document.getElementById('tab-cancellations').classList.toggle('hidden', btn.dataset.tab !== 'cancellations');
+        document.getElementById('tab-settings').classList.toggle('hidden', btn.dataset.tab !== 'settings');
       });
     });
 
     (async function init() {
       const session = await vouchRequireRole('admin', 'dashboard');
       if (!session) return;
-      await Promise.all([loadClients(), loadCancellations()]);
+      await Promise.all([loadClients(), loadCancellations(), loadContractSettings()]);
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('content').classList.remove('hidden');
     })();
