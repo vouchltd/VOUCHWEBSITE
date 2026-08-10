@@ -61,6 +61,7 @@
       <div class="flex gap-2 mb-8" role="tablist">
         <button class="tab-btn active" data-tab="clients" role="tab">Clients</button>
         <button class="tab-btn" data-tab="cancellations" role="tab">Cancellation Requests <span id="cancel-badge"></span></button>
+        <button class="tab-btn" data-tab="announcements" role="tab">Announcements</button>
         <button class="tab-btn" data-tab="settings" role="tab">Settings</button>
       </div>
 
@@ -173,6 +174,29 @@
         </div>
       </section>
 
+      <!-- ANNOUNCEMENTS TAB -->
+      <section id="tab-announcements" class="hidden">
+        <div class="card p-6">
+          <h2 class="text-lg font-semibold mb-1">Send Announcement</h2>
+          <p class="text-xs text-[#1B2620]/50 mb-4 max-w-md">Sends an individual email to each matching client &mdash; they never see each other's addresses.</p>
+          <form id="announcement-form" class="grid gap-4">
+            <div><label for="ann-subject">Subject</label><input class="input" type="text" id="ann-subject" required></div>
+            <div><label for="ann-message">Message</label><textarea class="input" id="ann-message" rows="8" required></textarea></div>
+            <div>
+              <label>Send to</label>
+              <div class="flex flex-col sm:flex-row gap-2 sm:gap-6 text-sm mt-1">
+                <label class="flex items-center gap-2 font-normal normal-case"><input type="radio" name="ann-scope" value="active" checked>Active clients only (<span id="ann-count-active">0</span>)</label>
+                <label class="flex items-center gap-2 font-normal normal-case"><input type="radio" name="ann-scope" value="all">All clients, including cancelled (<span id="ann-count-all">0</span>)</label>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <button type="submit" class="btn-primary rounded-full px-6 py-2.5 text-sm font-semibold" id="ann-submit">Send Announcement</button>
+              <p class="text-sm hidden" id="ann-msg" role="status" aria-live="polite"></p>
+            </div>
+          </form>
+        </div>
+      </section>
+
       <!-- SETTINGS TAB -->
       <section id="tab-settings" class="hidden">
         <div class="card p-6">
@@ -224,6 +248,9 @@
         tr.addEventListener('click', () => openClientDetail(c.id));
         tbody.appendChild(tr);
       });
+
+      document.getElementById('ann-count-active').textContent = clientsCache.filter((c) => c.status !== 'cancelled').length;
+      document.getElementById('ann-count-all').textContent = clientsCache.length;
     }
 
     function openClientDetail(clientId) {
@@ -486,6 +513,42 @@
       document.getElementById('cs-template-id').value = data?.value || '';
     }
 
+    document.getElementById('announcement-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const subject = document.getElementById('ann-subject').value.trim();
+      const message = document.getElementById('ann-message').value.trim();
+      const includeCancelled = document.querySelector('input[name="ann-scope"]:checked').value === 'all';
+      const count = includeCancelled ? clientsCache.length : clientsCache.filter((c) => c.status !== 'cancelled').length;
+      if (!confirm(`Send this announcement to ${count} client${count === 1 ? '' : 's'}? This can't be undone.`)) return;
+
+      const btn = document.getElementById('ann-submit');
+      const msg = document.getElementById('ann-msg');
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      msg.classList.add('hidden');
+      try {
+        const session = await vouchGetSession();
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/send-announcement`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ subject, message, include_cancelled: includeCancelled }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Unknown error');
+        msg.textContent = `Sent to ${result.sent} of ${result.total} clients.` + (result.failed > 0 ? ` ${result.failed} failed to send.` : '');
+        msg.className = 'text-sm ' + (result.failed > 0 ? 'text-[#CF9640]' : 'text-[#2E4B3F]');
+        msg.classList.remove('hidden');
+        document.getElementById('announcement-form').reset();
+      } catch (err) {
+        msg.textContent = 'Error: ' + err.message;
+        msg.className = 'text-sm text-[#A6432E]';
+        msg.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Send Announcement';
+      }
+    });
+
     document.getElementById('contract-settings-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('cs-submit');
@@ -507,6 +570,7 @@
         btn.classList.add('active');
         document.getElementById('tab-clients').classList.toggle('hidden', btn.dataset.tab !== 'clients');
         document.getElementById('tab-cancellations').classList.toggle('hidden', btn.dataset.tab !== 'cancellations');
+        document.getElementById('tab-announcements').classList.toggle('hidden', btn.dataset.tab !== 'announcements');
         document.getElementById('tab-settings').classList.toggle('hidden', btn.dataset.tab !== 'settings');
       });
     });
