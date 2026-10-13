@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vouch SoCal: Google Business Profile & Review Management, Southern California</title>
+<meta name="description" content="Vouch SoCal helps Southern California small businesses get found, get chosen, and get reviewed, starting in Long Beach. Google Business Profile review management, no passwords required.">
+<link rel="icon" type="image/png" href="brand_assets/favicon.png">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          oat: '#F5F1E8',
+          card: '#FCFBF7',
+          deep: '#1F3A2E',
+          ink: '#1B2620',
+          subtext: '#5C6B60',
+          mist: '#A9BCAF',
+          forest: '#2E4B3F',
+          honey: '#CF9640',
+          brown: '#3D2A08',
+          sage: '#5C9C6B',
+          clay: '#A6432E',
+        },
+        fontFamily: {
+          display: ['Inter', 'sans-serif'],
+          sans: ['Inter', 'sans-serif'],
+          mono: ['Inter', 'sans-serif'],
+        },
+        boxShadow: {
+          card: '0 1px 2px rgba(42,45,46,0.06), 0 12px 28px -12px rgba(45,95,63,0.28)',
+          lift: '0 2px 6px rgba(42,45,46,0.08), 0 20px 40px -16px rgba(45,95,63,0.35)',
+          deep: '0 1px 2px rgba(0,0,0,0.3), 0 24px 48px -12px rgba(0,0,0,0.45)',
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  @font-face {
+    font-family: 'Inter';
+    src: url('Inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Inter';
+    src: url('Inter/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+  }
+  :root { color-scheme: light; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  }
+  body { background: #F5F1E8; font-family: 'Inter', sans-serif; font-weight: 400; }
+  .font-display { font-family: 'Inter', sans-serif; font-weight: 600 !important; }
+  .font-mono { font-weight: 600 !important; }
+
+  /* grain texture overlay */
+  .grain { position: relative; }
+  .grain::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+  .grain-dark::before { mix-blend-mode: overlay; opacity: 0.35; }
+
+  /* reveal-on-scroll */
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1); }
+  .reveal.is-visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+  }
+
+  .btn-primary {
+    background: #CF9640;
+    color: #3D2A08;
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s cubic-bezier(0.16,1,0.3,1), background-color 0.35s;
+  }
+  .btn-primary:hover { background: #B8822F; transform: translateY(-2px); box-shadow: 0 14px 30px -10px rgba(207,150,64,0.55); }
+  .btn-primary:active { transform: translateY(0); box-shadow: 0 4px 10px -4px rgba(207,150,64,0.5); }
+  .btn-primary:focus-visible { outline: 2px solid #2E4B3F; outline-offset: 3px; }
+
+  .btn-secondary {
+    border: 1.5px solid rgba(46,75,63,0.4);
+    color: #2E4B3F;
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), background-color 0.35s, color 0.35s;
+  }
+  .btn-secondary:hover { background: #2E4B3F; color: #F5F1E8; transform: translateY(-2px); }
+  .btn-secondary:active { transform: translateY(0); }
+  .btn-secondary:focus-visible { outline: 2px solid #CF9640; outline-offset: 3px; }
+
+  .nav-link { position: relative; color: #2E4B3F; }
+  .nav-link::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 1.5px;
+    background: #CF9640; transform: scaleX(0); transform-origin: left;
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .nav-link:hover::after { transform: scaleX(1); }
+  .nav-link:focus-visible { outline: 2px solid #CF9640; outline-offset: 4px; border-radius: 2px; }
+
+  .card-hover { transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s cubic-bezier(0.16,1,0.3,1); }
+  .card-hover:hover { transform: translateY(-4px); }
+
+  .bar-fill { transform: scaleX(0); transform-origin: left; transition: transform 1.2s cubic-bezier(0.16,1,0.3,1); }
+  .bar-fill.is-visible { transform: scaleX(1); }
+
+  .marquee-track { animation: marquee 28s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  .faq-toggle[aria-expanded="true"] .faq-icon { transform: rotate(45deg); }
+  .faq-icon { transition: transform 0.35s cubic-bezier(0.16,1,0.3,1); }
+  .faq-panel { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.16,1,0.3,1); }
+
+  ::selection { background: #CF9640; color: #3D2A08; }
+
+  .stamp {
+    border: 1.5px solid rgba(245,241,232,0.35);
+    color: #F5F1E8;
+  }
+
+  /* Audit lead-capture form */
+  #audit-form-card, #audit-thankyou {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #FCFBF7;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    text-align: left;
+    font-family: 'Inter', sans-serif;
+  }
+  .audit-field { margin-bottom: 20px; }
+  .audit-field:last-of-type { margin-bottom: 0; }
+  .audit-label {
+    display: block;
+    color: #5C6B60;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .audit-input, .audit-select {
+    display: block;
+    width: 100%;
+    border: 1px solid #D9DFDA;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 15px;
+    background: #FFFFFF;
+    color: #1B2620;
+    font-family: inherit;
+    transition: border-color 0.15s ease;
+  }
+  .audit-input:focus, .audit-select:focus {
+    outline: none;
+    border: 2px solid #2E4B3F;
+    padding: 11px 13px;
+  }
+  .audit-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%235C6B60' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .audit-select:focus { padding-right: 35px; }
+  .audit-input.is-error, .audit-select.is-error { border-color: #A6432E; }
+  .audit-input.is-error:focus, .audit-select.is-error:focus { border: 2px solid #A6432E; padding: 11px 13px; }
+  .audit-error-msg { color: #A6432E; font-size: 12px; margin-top: 4px; }
+  .audit-submit {
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    margin-top: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    background: #CF9640;
+    color: #3D2A08;
+    font-family: inherit;
+    transition: background-color 0.15s ease;
+  }
+  .audit-submit:hover:not(:disabled) { background: #B8822F; }
+  .audit-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  .audit-hint { text-align: center; color: #8B9A8F; font-size: 12px; margin-top: 10px; }
+  .audit-formerror { color: #A6432E; font-size: 13px; margin-top: 12px; text-align: center; }
+  #audit-thankyou p { color: #2E4B3F; font-weight: 700; font-size: 17px; line-height: 1.6; text-align: center; }
+
+  .skip-link {
+    position: absolute; left: 1rem; top: -3rem;
+    background: #2E4B3F; color: #F5F1E8; padding: 0.6rem 1rem; border-radius: 8px;
+    font-weight: 600; font-size: 0.9rem; z-index: 100;
+    transition: top 0.2s ease;
+  }
+  .skip-link:focus { top: 1rem; }
+
+  #cookie-banner {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    background: #1F3A2E; color: #F5F1E8;
+  }
+</style>
+</head>
+
+<body class="bg-oat text-ink antialiased">
+  <a href="#top" class="skip-link">Skip to main content</a>
+
+  <!-- NAV -->
+  <header class="sticky top-0 z-50 bg-oat/90 backdrop-blur-sm border-b border-ink/10">
+    <div class="max-w-6xl mx-auto px-6 lg:px-8 flex items-center justify-between h-28">
+      <a href="#top" class="flex items-center gap-2.5 group">
+        <img src="brand_assets/logo-mark.png" alt="Vouch SoCal" class="h-[60px] w-auto object-contain transition-transform duration-300 group-hover:-rotate-6">
+        <span class="font-display text-2xl tracking-tight text-forest">Vouch SoCal</span>
+      </a>
+      <nav class="hidden md:flex items-center gap-9 text-[0.95rem]">
+        <a href="#problem" class="nav-link py-1">What we fix</a>
+        <a href="#how" class="nav-link py-1">How it works</a>
+        <a href="#pricing" class="nav-link py-1">Pricing</a>
+        <a href="#faq" class="nav-link py-1">FAQ</a>
+      </nav>
+      <div class="flex items-center gap-3">
+        <a href="portal/login" class="btn-secondary hidden sm:inline-flex items-center rounded-full px-5 py-2.5 text-sm font-semibold">Client Login</a>
+        <a href="#audit" class="btn-primary hidden sm:inline-flex items-center rounded-full px-5 py-2.5 text-sm font-semibold">Get your free audit</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="relative overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 lg:px-8 pt-16 pb-20 lg:pt-24 lg:pb-28">
+        <p class="font-mono text-xs sm:text-sm tracking-[0.18em] uppercase text-forest mb-6 reveal">Long Beach, CA · Serving Southern California</p>
+        <h1 class="font-display text-[2.75rem] leading-[1.05] sm:text-6xl lg:text-7xl tracking-[-0.02em] max-w-4xl reveal" style="transition-delay:0.05s">
+          Get found.<br>
+          Get chosen.<br>
+          <span class="italic text-forest">Get reviewed.</span>
+        </h1>
+        <p class="mt-7 max-w-xl text-lg leading-[1.7] text-subtext reveal" style="transition-delay:0.1s">
+          We manage reviews on your Google Business Profile so more of the people searching nearby actually pick up the phone. Plain language, honest pricing, and we never touch your passwords.
+        </p>
+        <div class="mt-9 flex flex-wrap gap-4 reveal" style="transition-delay:0.15s">
+          <a href="#audit" class="btn-primary inline-flex items-center rounded-full px-7 py-3.5 font-semibold">Get your free profile audit</a>
+          <a href="#how" class="btn-secondary inline-flex items-center rounded-full px-7 py-3.5 font-semibold">See how it works</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CATEGORY STRIP -->
+    <section class="border-y border-ink/10 bg-card py-10 overflow-hidden">
+      <p class="text-center font-mono text-xs tracking-[0.18em] uppercase text-subtext mb-6">Built for Southern California small businesses, starting in Long Beach</p>
+      <div class="flex whitespace-nowrap" aria-hidden="true">
+        <div class="marquee-track flex gap-14 pr-14 font-display text-2xl sm:text-3xl text-ink/70 italic">
+          <span>Restaurants</span><span>·</span><span>Gyms</span><span>·</span><span>Salons</span><span>·</span><span>Auto Shops</span><span>·</span><span>Trades</span><span>·</span><span>Home Services</span><span>·</span>
+          <span>Restaurants</span><span>·</span><span>Gyms</span><span>·</span><span>Salons</span><span>·</span><span>Auto Shops</span><span>·</span><span>Trades</span><span>·</span><span>Home Services</span><span>·</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROBLEM / FEATURES -->
+    <section id="problem" class="max-w-6xl mx-auto px-6 lg:px-8 py-24 lg:py-32">
+      <div class="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
+        <div>
+          <p class="font-mono text-xs tracking-[0.18em] uppercase text-clay mb-5 reveal">What's actually broken</p>
+          <h2 class="font-display text-4xl sm:text-5xl leading-[1.08] tracking-[-0.02em] reveal" style="transition-delay:0.05s">Your business is easy to find.<br>Just not by search engines.</h2>
+          <p class="mt-6 text-lg leading-[1.7] text-subtext reveal" style="transition-delay:0.1s">
+            Unanswered reviews sitting there for months. It's not that customers can't find you, it's that Google keeps showing them someone else first.
+          </p>
+          <ul class="mt-9 space-y-5 reveal" style="transition-delay:0.15s">
+            <li class="flex gap-4">
+              <span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-forest/10 text-forest"><svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1 5L4.5 8.5L12 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="text-ink/80 leading-[1.7]">Every review gets a real, professionally written response, good or bad</span>
+            </li>
+            <li class="flex gap-4">
+              <span class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-forest/10 text-forest"><svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="M1 5L4.5 8.5L12 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="text-ink/80 leading-[1.7]">Q&amp;A monitored, so a wrong answer doesn't sit there unanswered for months</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- mock profile card -->
+        <div class="reveal" style="transition-delay:0.1s">
+          <div class="grid sm:grid-cols-2 gap-5">
+            <div class="rounded-2xl bg-card border border-ink/10 p-5 shadow-card">
+              <p class="font-mono text-[0.65rem] tracking-[0.15em] uppercase text-ink/40 mb-3">Before</p>
+              <div class="h-24 rounded-lg bg-ink/10 mb-4"></div>
+              <div class="h-3 w-3/4 rounded bg-ink/15 mb-2"></div>
+              <div class="h-3 w-1/2 rounded bg-ink/10 mb-4"></div>
+              <div class="flex items-center gap-1 text-honey text-sm mb-1">★★★☆☆ <span class="text-ink/40 font-mono text-xs ml-1">3.8 (41)</span></div>
+              <p class="text-xs text-ink/40 mt-3 leading-relaxed">6 reviews sitting unanswered for weeks</p>
+            </div>
+            <div class="rounded-2xl bg-deep text-oat p-5 shadow-lift card-hover sm:mt-8">
+              <p class="font-mono text-[0.65rem] tracking-[0.15em] uppercase text-mist mb-3">After</p>
+              <div class="h-24 rounded-lg bg-oat/15 mb-4"></div>
+              <div class="h-3 w-3/4 rounded bg-oat/30 mb-2"></div>
+              <div class="h-3 w-1/2 rounded bg-oat/20 mb-4"></div>
+              <div class="flex items-center gap-1 text-sage text-sm mb-1">★★★★★ <span class="text-mist font-mono text-xs ml-1">4.7 (128)</span></div>
+              <p class="text-xs text-mist mt-3 leading-relaxed">Every review answered within 48 hours</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how" class="bg-deep text-oat py-24 lg:py-32 grain grain-dark relative">
+      <div class="max-w-6xl mx-auto px-6 lg:px-8">
+        <p class="font-mono text-xs tracking-[0.18em] uppercase text-sage mb-5 reveal">How it works</p>
+        <h2 class="font-display text-4xl sm:text-5xl leading-[1.08] tracking-[-0.02em] max-w-2xl reveal" style="transition-delay:0.05s">Three steps. No retainer to start.</h2>
+
+        <div class="mt-16 grid md:grid-cols-3 gap-10 lg:gap-8">
+          <div class="reveal" style="transition-delay:0.05s">
+            <p class="font-mono text-sm text-sage mb-4">01</p>
+            <h3 class="font-display text-2xl mb-3">Audit</h3>
+            <p class="text-mist leading-[1.7]">We go through your profile top to bottom and show you exactly what's costing you visibility. Flat fee, no commitment required to start.</p>
+          </div>
+          <div class="reveal" style="transition-delay:0.15s">
+            <p class="font-mono text-sm text-sage mb-4">02</p>
+            <h3 class="font-display text-2xl mb-3">Optimize</h3>
+            <p class="text-mist leading-[1.7]">We set up a system that asks real customers for real reviews, and put a response process in place so nothing goes unanswered.</p>
+          </div>
+          <div class="reveal" style="transition-delay:0.25s">
+            <p class="font-mono text-sm text-sage mb-4">03</p>
+            <h3 class="font-display text-2xl mb-3">Manage</h3>
+            <p class="text-mist leading-[1.7]">Every month, we respond to every review and keep the reviews coming in, so you don't have to think about it again.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRUST / SECURITY -->
+    <section class="max-w-6xl mx-auto px-6 lg:px-8 py-24 lg:py-32">
+      <div class="grid lg:grid-cols-2 gap-14 items-center">
+        <div class="reveal">
+          <p class="font-mono text-xs tracking-[0.18em] uppercase text-forest mb-5">Respect for security</p>
+          <h2 class="font-display text-4xl sm:text-5xl leading-[1.08] tracking-[-0.02em]">We will never ask you for your password.</h2>
+          <p class="mt-6 text-lg leading-[1.7] text-subtext">Google gives every business owner a way to add a manager to their profile without ever handing over a login. That's the only access we ask for. If anyone else asks you for a password to "optimize your listing," that's your sign to hang up.</p>
+        </div>
+        <div class="rounded-2xl bg-deep text-oat p-9 sm:p-11 shadow-deep reveal" style="transition-delay:0.1s">
+          <div class="inline-flex items-center justify-center h-14 w-14 rounded-full stamp mb-7">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L20 6V12C20 16.5 16.5 20.5 12 22C7.5 20.5 4 16.5 4 12V6L12 2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12L11 14L15.5 9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <p class="font-mono text-xs tracking-[0.18em] uppercase text-mist mb-3">Manager-role access only</p>
+          <p class="text-2xl font-display leading-snug">Revoke it anytime. We can never lock you out of your own listing.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- THE MATH -->
+    <section class="bg-card py-24 lg:py-32 border-y border-ink/10">
+      <div class="max-w-6xl mx-auto px-6 lg:px-8">
+        <p class="font-mono text-xs tracking-[0.18em] uppercase text-forest mb-5 reveal text-center">Numbers over adjectives</p>
+        <h2 class="font-display text-4xl sm:text-5xl leading-[1.08] tracking-[-0.02em] text-center max-w-3xl mx-auto reveal" style="transition-delay:0.05s">We don't promise a result. Here's the math that decides who gets the call.</h2>
+
+        <div class="mt-16 grid sm:grid-cols-2 gap-6">
+          <div class="rounded-2xl bg-white border border-ink/10 p-8 text-center card-hover shadow-card reveal" style="transition-delay:0.15s">
+            <p class="font-mono text-4xl sm:text-5xl text-forest">2 → 18<span class="text-2xl align-top">+</span></p>
+            <p class="mt-4 text-sm text-subtext leading-relaxed">New reviews per 90 days</p>
+          </div>
+          <div class="rounded-2xl bg-white border border-ink/10 p-8 text-center card-hover shadow-card reveal" style="transition-delay:0.25s">
+            <p class="font-mono text-4xl sm:text-5xl text-forest">12% → 93%<span class="text-2xl align-top">+</span></p>
+            <p class="mt-4 text-sm text-subtext leading-relaxed">Reviews with a real response</p>
+          </div>
+        </div>
+        <p class="mt-8 text-center font-mono text-xs text-subtext/80 max-w-xl mx-auto leading-relaxed reveal">Illustrative example based on typical Southern California listings we've audited, not a guarantee of results for any specific business.</p>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section id="pricing" class="max-w-6xl mx-auto px-6 lg:px-8 py-24 lg:py-32">
+      <p class="font-mono text-xs tracking-[0.18em] uppercase text-forest mb-5 reveal text-center">Pricing</p>
+      <h2 class="font-display text-4xl sm:text-5xl leading-[1.08] tracking-[-0.02em] text-center reveal" style="transition-delay:0.05s">Simple, transparent pricing.</h2>
+      <p class="mt-5 text-center text-subtext max-w-xl mx-auto leading-[1.7] reveal" style="transition-delay:0.05s">No hidden fees, no surprises. Just straightforward pricing for Southern California businesses.</p>
+
+      <div class="mt-16 grid md:grid-cols-3 gap-7 items-stretch">
+        <div class="rounded-2xl bg-deep text-oat p-9 shadow-deep grain grain-dark card-hover reveal" style="transition-delay:0.05s">
+          <p class="font-mono text-xs tracking-[0.15em] uppercase text-sage mb-3">Monthly</p>
+          <h3 class="font-display text-3xl mb-2">Management</h3>
+          <p class="font-mono text-2xl text-oat mb-5">$179.99<span class="text-sm text-mist"> /month</span></p>
+          <p class="text-mist leading-[1.7] mb-6">Ongoing upkeep and review management, so your profile stays sharp without a second thought.</p>
+          <ul class="space-y-3 text-sm text-mist">
+            <li class="flex gap-3"><span class="text-sage">—</span>Every review answered within 48 hours</li>
+            <li class="flex gap-3"><span class="text-sage">—</span>Monthly report, written in plain English</li>
+          </ul>
+        </div>
+        <div class="rounded-2xl bg-card border border-ink/10 p-9 card-hover shadow-card reveal" style="transition-delay:0.15s">
+          <p class="font-mono text-xs tracking-[0.15em] uppercase text-forest mb-3">One-Time</p>
+          <h3 class="font-display text-3xl mb-2">Setup Fee</h3>
+          <p class="font-mono text-2xl text-ink mb-5">$199.99<span class="text-sm text-subtext"> one-time</span></p>
+          <p class="text-subtext leading-[1.7] mb-6">A one-time setup to get your review management up and running before monthly management begins.</p>
+          <ul class="space-y-3 text-sm text-ink/80">
+            <li class="flex gap-3"><span class="text-forest">—</span>Full audit of your existing reviews</li>
+            <li class="flex gap-3"><span class="text-forest">—</span>Manager access setup, no passwords needed</li>
+          </ul>
+        </div>
+        <div class="rounded-2xl bg-card border border-ink/10 p-9 card-hover shadow-card reveal" style="transition-delay:0.25s">
+          <p class="font-mono text-xs tracking-[0.15em] uppercase text-clay mb-3">Optional</p>
+          <h3 class="font-display text-3xl mb-2">Add-On Services</h3>
+          <p class="font-mono text-2xl text-ink mb-5">$99.99<span class="text-sm text-subtext"> /month per platform</span></p>
+          <p class="text-subtext leading-[1.7] mb-6">Beyond Google, we'll manage your other listings with the same care, so reviews everywhere get a real response.</p>
+          <ul class="space-y-3 text-sm text-ink/80">
+            <li class="flex gap-3"><span class="text-honey">—</span>Yelp Business Profile management, $99.99/month</li>
+            <li class="flex gap-3"><span class="text-honey">—</span>Facebook Business Profile management, $99.99/month</li>
+            <li class="flex gap-3 font-semibold text-forest"><span class="text-honey">—</span>Bundle both and save, just $169.99/month total</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-10 flex justify-center reveal">
+        <a href="#audit" class="btn-primary inline-flex items-center rounded-full px-10 py-4 text-base font-semibold">Get started</a>
+      </div>
+      <p class="mt-6 text-center text-sm text-subtext reveal">Month-to-month management. Send a cancellation notice anytime, no contracts you can't read.</p>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="bg-card py-24 lg:py-32 border-y border-ink/10">
+      <div class="max-w-3xl mx-auto px-6 lg:px-8">
+        <p class="font-mono text-xs tracking-[0.18em] uppercase text-forest mb-5 reveal text-center">FAQ</p>
+        <h2 class="font-display text-4xl sm:text-5xl leading-[1.08] tracking-[-0.02em] text-center reveal" style="transition-delay:0.05s">Straight answers to the questions we actually get.</h2>
+
+        <div class="mt-14 divide-y divide-ink/10 reveal" style="transition-delay:0.1s">
+          <div class="py-2">
+            <button class="faq-toggle w-full flex items-center justify-between gap-4 py-5 text-left" aria-expanded="false">
+              <span class="font-display text-xl">Do you need my Google password?</span>
+              <span class="faq-icon shrink-0 text-2xl text-forest leading-none">+</span>
+            </button>
+            <div class="faq-panel"><p class="pb-6 text-subtext leading-[1.7] pr-8">No. Never. You add us as a Manager on your Business Profile. You can revoke that access anytime, and we can never lock you out of your own listing.</p></div>
+          </div>
+          <div class="py-2">
+            <button class="faq-toggle w-full flex items-center justify-between gap-4 py-5 text-left" aria-expanded="false">
+              <span class="font-display text-xl">Can you guarantee more 5-star reviews?</span>
+              <span class="faq-icon shrink-0 text-2xl text-forest leading-none">+</span>
+            </button>
+            <div class="faq-panel"><p class="pb-6 text-subtext leading-[1.7] pr-8">No, and anyone who guarantees that is lying to you. We build honest systems that make it easy for happy customers to leave a review, and the results follow from there.</p></div>
+          </div>
+          <div class="py-2">
+            <button class="faq-toggle w-full flex items-center justify-between gap-4 py-5 text-left" aria-expanded="false">
+              <span class="font-display text-xl">How long does setup take?</span>
+              <span class="faq-icon shrink-0 text-2xl text-forest leading-none">+</span>
+            </button>
+            <div class="faq-panel"><p class="pb-6 text-subtext leading-[1.7] pr-8">Most audits are completed within two weeks, depending on your review backlog.</p></div>
+          </div>
+          <div class="py-2">
+            <button class="faq-toggle w-full flex items-center justify-between gap-4 py-5 text-left" aria-expanded="false">
+              <span class="font-display text-xl">What if I already have a marketing agency?</span>
+              <span class="faq-icon shrink-0 text-2xl text-forest leading-none">+</span>
+            </button>
+            <div class="faq-panel"><p class="pb-6 text-subtext leading-[1.7] pr-8">We only work on your Google Business Profile reviews. We're built to sit alongside whatever else you're doing, not replace it.</p></div>
+          </div>
+          <div class="py-2">
+            <button class="faq-toggle w-full flex items-center justify-between gap-4 py-5 text-left" aria-expanded="false">
+              <span class="font-display text-xl">Do I need to sign a contract?</span>
+              <span class="faq-icon shrink-0 text-2xl text-forest leading-none">+</span>
+            </button>
+            <div class="faq-panel"><p class="pb-6 text-subtext leading-[1.7] pr-8">Setup is a flat one-time fee. Management is month-to-month, and you can cancel anytime.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section id="audit" class="relative bg-deep text-oat py-28 lg:py-36 grain grain-dark overflow-hidden">
+      <div class="max-w-4xl mx-auto px-6 lg:px-8 text-center relative">
+        <h2 class="font-display text-5xl sm:text-6xl lg:text-7xl tracking-[-0.02em] reveal">This is Vouch SoCal.</h2>
+        <p class="mt-6 text-lg text-mist max-w-xl mx-auto leading-[1.7] reveal" style="transition-delay:0.05s">Straightforward help for Southern California businesses who'd rather be run well than look flashy.</p>
+        <div class="mt-10 reveal" style="transition-delay:0.1s" aria-live="polite" aria-atomic="true">
+          <form id="audit-form" novalidate>
+            <div id="audit-form-card">
+              <div class="audit-field">
+                <label class="audit-label" for="audit-name">Your Name</label>
+                <input class="audit-input" type="text" id="audit-name" name="name" required>
+                <p class="audit-error-msg hidden" id="audit-error-name"></p>
+              </div>
+              <div class="audit-field">
+                <label class="audit-label" for="audit-business_name">Business Name</label>
+                <input class="audit-input" type="text" id="audit-business_name" name="business_name" required>
+                <p class="audit-error-msg hidden" id="audit-error-business_name"></p>
+              </div>
+              <div class="audit-field">
+                <label class="audit-label" for="audit-category">Business Category</label>
+                <select class="audit-select" id="audit-category" name="category" required>
+                  <option value="" disabled selected>Select a category</option>
+                  <option value="Restaurant / Café">Restaurant / Café</option>
+                  <option value="Nail Salon / Spa">Nail Salon / Spa</option>
+                  <option value="Auto Repair">Auto Repair</option>
+                  <option value="Gym / Fitness">Gym / Fitness</option>
+                  <option value="Hair Salon / Barber">Hair Salon / Barber</option>
+                  <option value="Other">Other</option>
+                </select>
+                <p class="audit-error-msg hidden" id="audit-error-category"></p>
+              </div>
+              <div class="audit-field">
+                <label class="audit-label" for="audit-address">Business Address</label>
+                <input class="audit-input" type="text" id="audit-address" name="address" placeholder="123 Main St, Long Beach, CA" required>
+                <p class="audit-error-msg hidden" id="audit-error-address"></p>
+              </div>
+              <div class="audit-field">
+                <label class="audit-label" for="audit-phone">Phone Number</label>
+                <input class="audit-input" type="tel" id="audit-phone" name="phone" required>
+                <p class="audit-error-msg hidden" id="audit-error-phone"></p>
+              </div>
+              <div class="audit-field">
+                <label class="audit-label" for="audit-email">Email Address</label>
+                <input class="audit-input" type="email" id="audit-email" name="email" required>
+                <p class="audit-error-msg hidden" id="audit-error-email"></p>
+              </div>
+              <div class="audit-field">
+                <label class="audit-label" for="audit-maps_link">Google Maps Link</label>
+                <input class="audit-input" type="url" id="audit-maps_link" name="maps_link" placeholder="Paste your Google Maps link (optional, helps us find you faster)">
+                <p class="audit-error-msg hidden" id="audit-error-maps_link"></p>
+              </div>
+              <button type="submit" class="audit-submit" id="audit-submit">Get My Free Audit</button>
+              <p class="audit-formerror hidden" id="audit-form-error">Something went wrong. Please email us directly at vouchsocal@gmail.com</p>
+              <p class="audit-hint">You'll receive your free audit within 24 hours. No spam, ever.</p>
+            </div>
+          </form>
+          <div id="audit-thankyou" class="hidden">
+            <p>We're on it. You'll have your free audit within 24 hours. We'll reach out to <span id="audit-thankyou-email"></span> or call <span id="audit-thankyou-phone"></span>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-deep text-mist py-16">
+    <div class="max-w-6xl mx-auto px-6 lg:px-8">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div>
+          <a href="#top" class="flex items-center gap-2.5 mb-4">
+            <img src="brand_assets/logo-mark.png" alt="Vouch SoCal" class="h-16 w-auto object-contain">
+            <span class="font-display text-xl text-oat">Vouch SoCal</span>
+          </a>
+          <p class="text-sm leading-relaxed">Long Beach, CA · Southern California</p>
+        </div>
+        <div>
+          <p class="font-mono text-xs tracking-[0.15em] uppercase text-mist/70 mb-4">Services</p>
+          <ul class="space-y-2.5 text-sm">
+            <li><a href="#problem" class="hover:text-oat transition-colors">Review setup</a></li>
+            <li><a href="#how" class="hover:text-oat transition-colors">Ongoing management</a></li>
+            <li><a href="#problem" class="hover:text-oat transition-colors">Review management</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="font-mono text-xs tracking-[0.15em] uppercase text-mist/70 mb-4">Company</p>
+          <ul class="space-y-2.5 text-sm">
+            <li><a href="#how" class="hover:text-oat transition-colors">How it works</a></li>
+            <li><a href="#pricing" class="hover:text-oat transition-colors">Pricing</a></li>
+            <li><a href="#faq" class="hover:text-oat transition-colors">FAQ</a></li>
+            <li><a href="portal/login" class="hover:text-oat transition-colors">Client Login</a></li>
+            <li><a href="/" class="hover:text-oat transition-colors">Vouch SoCal for agencies</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="font-mono text-xs tracking-[0.15em] uppercase text-mist/70 mb-4">Contact</p>
+          <ul class="space-y-2.5 text-sm">
+            <li><a href="mailto:vouchsocal@gmail.com" class="hover:text-oat transition-colors">vouchsocal@gmail.com</a></li>
+            <li>Long Beach, CA · Southern California</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mt-14 pt-8 border-t border-oat/10 flex flex-col sm:flex-row justify-between gap-3 font-mono text-xs text-mist/70">
+        <p>© 2026 Vouch SoCal.</p>
+        <div class="flex flex-wrap gap-x-5 gap-y-2">
+          <a href="privacy-policy" class="hover:text-oat transition-colors">Privacy Policy</a>
+          <a href="terms" class="hover:text-oat transition-colors">Terms of Service</a>
+          <a href="privacy-policy#cookies" class="hover:text-oat transition-colors">Cookie Policy</a>
+        </div>
+        <p>We never ask for your password.</p>
+      </div>
+      <p class="mt-6 font-mono text-[0.7rem] text-mist/50">Vouch SoCal is a subsidiary of Lens and Ladder. Vouch SoCal is owned, operated, and overseen by Lens and Ladder.</p>
+    </div>
+  </footer>
+
+  <!-- COOKIE CONSENT -->
+  <div id="cookie-banner" class="hidden" role="dialog" aria-label="Cookie notice" aria-describedby="cookie-banner-text">
+    <div class="max-w-6xl mx-auto px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <p id="cookie-banner-text" class="text-sm leading-relaxed text-oat/90 max-w-2xl">
+        We only use essential cookies to run this site and keep you signed in to the client portal. We don't use tracking or advertising cookies, and we don't sell your data, so there's no option to opt out of anything that doesn't exist. See our
+        <a href="privacy-policy#cookies" class="underline hover:text-oat">Cookie Policy</a> for details.
+      </p>
+      <div class="flex gap-3 shrink-0">
+        <button id="cookie-accept" type="button" class="btn-primary rounded-full px-5 py-2.5 text-sm font-semibold">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // cookie consent
+    (function () {
+      const banner = document.getElementById('cookie-banner');
+      const accept = document.getElementById('cookie-accept');
+      if (!banner) return;
+      const stored = localStorage.getItem('vouch_cookie_consent');
+      if (!stored) banner.classList.remove('hidden');
+      accept.addEventListener('click', () => {
+        localStorage.setItem('vouch_cookie_consent', 'acknowledged');
+        banner.classList.add('hidden');
+      });
+    })();
+
+    // scroll reveal
+    const revealEls = document.querySelectorAll('.reveal');
+    const barEls = document.querySelectorAll('.bar-fill');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    revealEls.forEach((el) => io.observe(el));
+    barEls.forEach((el) => io.observe(el));
+
+    // faq accordion
+    document.querySelectorAll('.faq-toggle').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        const panel = btn.nextElementSibling;
+        document.querySelectorAll('.faq-toggle').forEach((other) => {
+          if (other !== btn) {
+            other.setAttribute('aria-expanded', 'false');
+            other.nextElementSibling.style.maxHeight = null;
+          }
+        });
+        btn.setAttribute('aria-expanded', String(!expanded));
+        panel.style.maxHeight = !expanded ? panel.scrollHeight + 'px' : null;
+      });
+    });
+
+    // audit lead capture form
+    (function () {
+      const form = document.getElementById('audit-form');
+      if (!form) return;
+
+      const submitBtn = document.getElementById('audit-submit');
+      const formError = document.getElementById('audit-form-error');
+      const thankYou = document.getElementById('audit-thankyou');
+      const fields = ['name', 'business_name', 'category', 'address', 'phone', 'email', 'maps_link'];
+
+      function setError(field, message) {
+        const input = form.elements[field];
+        const errorEl = document.getElementById('audit-error-' + field);
+        if (message) {
+          input.classList.add('is-error');
+          errorEl.textContent = message;
+          errorEl.classList.remove('hidden');
+        } else {
+          input.classList.remove('is-error');
+          errorEl.textContent = '';
+          errorEl.classList.add('hidden');
+        }
+      }
+
+      function validate() {
+        let valid = true;
+        const data = {};
+        fields.forEach((f) => { data[f] = form.elements[f].value.trim(); });
+
+        if (!data.name) { setError('name', 'Please enter your name.'); valid = false; }
+        else setError('name', '');
+
+        if (!data.business_name) { setError('business_name', 'Please enter your business name.'); valid = false; }
+        else setError('business_name', '');
+
+        if (!data.category) { setError('category', 'Please select a category.'); valid = false; }
+        else setError('category', '');
+
+        if (!data.address) { setError('address', 'Please enter your business address.'); valid = false; }
+        else setError('address', '');
+
+        const phoneDigits = data.phone.replace(/\D/g, '');
+        if (!data.phone) { setError('phone', 'Please enter your phone number.'); valid = false; }
+        else if (phoneDigits.length !== 10) { setError('phone', 'Enter a valid 10-digit US phone number.'); valid = false; }
+        else setError('phone', '');
+
+        if (!data.email) { setError('email', 'Please enter your email address.'); valid = false; }
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) { setError('email', 'Enter a valid email address.'); valid = false; }
+        else setError('email', '');
+
+        if (data.maps_link && !/^https?:\/\/.+/i.test(data.maps_link)) { setError('maps_link', 'Enter a valid URL starting with http:// or https://.'); valid = false; }
+        else setError('maps_link', '');
+
+        return { valid, data };
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        formError.classList.add('hidden');
+
+        const { valid, data } = validate();
+        if (!valid) return;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+
+        fetch('https://formspree.io/f/mrewovza', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error('Formspree error');
+            document.getElementById('audit-thankyou-email').textContent = data.email;
+            document.getElementById('audit-thankyou-phone').textContent = data.phone;
+            form.classList.add('hidden');
+            thankYou.classList.remove('hidden');
+          })
+          .catch(() => {
+            formError.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Get My Free Audit';
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

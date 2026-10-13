@@ -4,3 +4,5 @@ temporary screenshots/
 
 .vercel
 .env*
+node_modules
+dist

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!--@head title="Start a free pilot | Vouch SoCal" desc="Free for {{pilotDays}} days on {{pilotLocations}} client locations, for our first agencies. Tell us about your agency and we will reply by email." path="/pilot"-->
+</head>
+<body>
+<!--@include header-->
+<main id="main">
+  <section class="section section-dark on-dark grain" style="padding-top:3.5rem">
+    <div class="wrap split" style="align-items:start">
+      <div>
+        <p class="eyebrow">Founding pilot</p>
+        <h1 style="font-size:clamp(2.4rem,6vw,3.75rem)">Start a <span class="accent">free pilot.</span></h1>
+        <p class="lead">Free for {{pilotDays}} days on {{pilotLocations}} of your client locations. We are taking on our first agencies.</p>
+        <ul class="check-list aside-list">
+          <li>Free for {{pilotDays}} days</li>
+          <li>{{pilotLocations}} of your client locations</li>
+          <li>For our first agencies</li>
+          <li>This form does not ask for payment details</li>
+        </ul>
+        <p>After that, pricing is ${{price}} per location per month with a {{minLocations}} location minimum. See <a href="/pricing">pricing</a>.</p>
+        <p class="source" style="text-transform:none;letter-spacing:0;font-size:0.9rem;font-weight:400">Our Google Business Profile API access is pending. Pilot timing depends on it, and we will tell you where it stands when we reply.</p>
+      </div>
+      <div>
+        <div id="form-area" class="form-card">
+            <form id="pilot-form" class="form" action="{{formspree}}" method="POST" data-email="{{email}}" novalidate>
+              <p id="form-error" class="form-error" role="alert" tabindex="-1"></p>
+
+              <div class="field">
+                <label for="name">Your name</label>
+                <input id="name" name="name" type="text" autocomplete="name" required aria-describedby="name-err">
+                <p id="name-err" class="error"></p>
+              </div>
+              <div class="field">
+                <label for="agency">Agency name</label>
+                <input id="agency" name="agency" type="text" autocomplete="organization" required aria-describedby="agency-err">
+                <p id="agency-err" class="error"></p>
+              </div>
+              <div class="form-2">
+                <div class="field">
+                  <label for="role">Your role</label>
+                  <input id="role" name="role" type="text" autocomplete="organization-title" required aria-describedby="role-err">
+                  <p id="role-err" class="error"></p>
+                </div>
+                <div class="field">
+                  <label for="locations">Client locations you manage</label>
+                  <input id="locations" name="locations" type="number" inputmode="numeric" min="1" step="1" required aria-describedby="locations-err">
+                  <p id="locations-err" class="error"></p>
+                </div>
+              </div>
+              <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" autocomplete="email" required aria-describedby="email-err">
+                <p id="email-err" class="error"></p>
+              </div>
+              <div class="field">
+                <label for="phone">Phone <span class="opt">(optional)</span></label>
+                <input id="phone" name="phone" type="tel" autocomplete="tel">
+              </div>
+              <div class="field">
+                <label for="current">What do you use today? <span class="opt">(optional)</span></label>
+                <textarea id="current" name="current_tools" aria-describedby="current-hint"></textarea>
+                <p id="current-hint" class="hint">For example: replying by hand, a spreadsheet, another tool.</p>
+              </div>
+
+              <input type="hidden" name="form_type" value="agency-pilot">
+              <div class="hp" aria-hidden="true"><label>Leave this empty <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label></div>
+
+              <button type="submit" class="btn btn-primary" id="submit-btn">Start a free pilot</button>
+            </form>
+          </div>
+
+          <div id="thanks" class="thanks" tabindex="-1" role="status" hidden>
+            <h2 style="font-size:1.5rem">Thanks. We got your request.</h2>
+            <p>We read every pilot request ourselves and will reply to the email you gave us. If you want to add anything, write to <a href="mailto:{{email}}">{{email}}</a>.</p>
+          </div>
+      </div>
+    </div>
+  </section>
+</main>
+<!--@include footer-->
+<script type="module" src="/src/pilot.js"></script>
+</body>
+</html>
