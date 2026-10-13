@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!--@head title="Pricing | Vouch SoCal" desc="${{price}} per location per month with a {{minLocations}} location minimum. Free {{pilotDays}} day pilot for our first agencies." path="/pricing"-->
+</head>
+<body>
+<!--@include header-->
+<main id="main">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Pricing</p>
+      <h1>Priced per location. <span class="accent">You keep the margin.</span></h1>
+      <p class="lead">You decide what to charge your own clients. We charge you by the location.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="grid grid-2">
+        <div class="card card-dark">
+          <h2 style="font-size:1.35rem">Per location</h2>
+          <p class="price">${{price}} <small>per location per month</small></p>
+          <p>{{minLocations}} location minimum, so at least ${{minMonthly}} a month.</p>
+          <ul class="check-list">
+            <li>Reply drafts in a voice profile for each location</li>
+            <li>Approval queue for your team</li>
+            <li>Dashboard for every location in one place</li>
+            <li>Weekly report you can forward to your client</li>
+            <li>Optional auto-post for positive reviews</li>
+          </ul>
+          <p class="source">A location is one Google Business Profile.</p>
+        </div>
+        <div class="card">
+          <h2 style="font-size:1.35rem">Founding pilot</h2>
+          <p class="price">Free <small>for {{pilotDays}} days</small></p>
+          <p>For our first agencies, on {{pilotLocations}} of your client locations.</p>
+          <ul class="check-list">
+            <li>The same product, not a trimmed demo</li>
+            <li>The form does not ask for payment details</li>
+            <li>When the {{pilotDays}} days end, we talk about what comes next</li>
+          </ul>
+          <a href="/pilot" class="btn btn-primary">Start a free pilot</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-card">
+    <div class="wrap narrow">
+      <h2>How agencies can think about it</h2>
+      <p>At 10 locations the cost to you is ${{price}} x 10 = ${{price10}} a month. What you charge each client is your call, so the difference is yours. We do not set your resale price.</p>
+      <p>Questions about terms? Check the <a href="/faq">FAQ</a> or write to <a href="mailto:{{email}}">{{email}}</a>.</p>
+    </div>
+  </section>
+</main>
+<!--@include footer-->
+</body>
+</html>
