@@ -1,0 +1,189 @@
+@font-face {
+    font-family: 'Inter';
+    src: url('/Inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Inter';
+    src: url('/Inter/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+  }
+  :root { color-scheme: light; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  }
+  body { background: #F5F1E8; font-family: 'Inter', sans-serif; font-weight: 400; }
+  .font-display { font-family: 'Inter', sans-serif; font-weight: 600 !important; }
+  .font-mono { font-weight: 600 !important; }
+
+  /* grain texture overlay */
+  .grain { position: relative; }
+  .grain::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+  .grain-dark::before { mix-blend-mode: overlay; opacity: 0.35; }
+
+  /* reveal-on-scroll. Hidden only when JS runs and motion is allowed (see the inline script in <head>). Transform and opacity only. */
+  .js .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1); }
+  .js .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+  .btn-primary {
+    background: #CF9640;
+    color: #3D2A08;
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s cubic-bezier(0.16,1,0.3,1), background-color 0.35s;
+  }
+  .btn-primary:hover { background: #B8822F; transform: translateY(-2px); box-shadow: 0 14px 30px -10px rgba(207,150,64,0.55); }
+  .btn-primary:active { transform: translateY(0); box-shadow: 0 4px 10px -4px rgba(207,150,64,0.5); }
+  .btn-primary:focus-visible { outline: 2px solid #2E4B3F; outline-offset: 3px; }
+
+  .btn-secondary {
+    border: 1.5px solid rgba(46,75,63,0.4);
+    color: #2E4B3F;
+    transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), background-color 0.35s, color 0.35s;
+  }
+  .btn-secondary:hover { background: #2E4B3F; color: #F5F1E8; transform: translateY(-2px); }
+  .btn-secondary:active { transform: translateY(0); }
+  .btn-secondary:focus-visible { outline: 2px solid #CF9640; outline-offset: 3px; }
+
+  .nav-link { position: relative; color: #2E4B3F; }
+  .nav-link::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 1.5px;
+    background: #CF9640; transform: scaleX(0); transform-origin: left;
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .nav-link:hover::after { transform: scaleX(1); }
+  .nav-link:focus-visible { outline: 2px solid #CF9640; outline-offset: 4px; border-radius: 2px; }
+
+  .card-hover { transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s cubic-bezier(0.16,1,0.3,1); }
+  .card-hover:hover { transform: translateY(-4px); }
+
+  .bar-fill { transform: scaleX(0); transform-origin: left; transition: transform 1.2s cubic-bezier(0.16,1,0.3,1); }
+  .bar-fill.is-visible { transform: scaleX(1); }
+
+  .marquee-track { animation: marquee 28s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  .faq-toggle[aria-expanded="true"] .faq-icon { transform: rotate(45deg); }
+  .faq-icon { transition: transform 0.35s cubic-bezier(0.16,1,0.3,1); }
+  .faq-panel { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.16,1,0.3,1); }
+
+  ::selection { background: #CF9640; color: #3D2A08; }
+
+  .stamp {
+    border: 1.5px solid rgba(245,241,232,0.35);
+    color: #F5F1E8;
+  }
+
+  /* Audit lead-capture form */
+  #audit-form-card, #audit-thankyou {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #FCFBF7;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    text-align: left;
+    font-family: 'Inter', sans-serif;
+  }
+  .audit-field { margin-bottom: 20px; }
+  .audit-field:last-of-type { margin-bottom: 0; }
+  .audit-label {
+    display: block;
+    color: #5C6B60;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .audit-input, .audit-select {
+    display: block;
+    width: 100%;
+    border: 1px solid #D9DFDA;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 15px;
+    background: #FFFFFF;
+    color: #1B2620;
+    font-family: inherit;
+    transition: border-color 0.15s ease;
+  }
+  .audit-input:focus, .audit-select:focus {
+    outline: none;
+    border: 2px solid #2E4B3F;
+    padding: 11px 13px;
+  }
+  .audit-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%235C6B60' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .audit-select:focus { padding-right: 35px; }
+  .audit-input.is-error, .audit-select.is-error { border-color: #A6432E; }
+  .audit-input.is-error:focus, .audit-select.is-error:focus { border: 2px solid #A6432E; padding: 11px 13px; }
+  .audit-error-msg { color: #A6432E; font-size: 12px; margin-top: 4px; }
+  .audit-submit {
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    margin-top: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    background: #CF9640;
+    color: #3D2A08;
+    font-family: inherit;
+    transition: background-color 0.15s ease;
+  }
+  .audit-submit:hover:not(:disabled) { background: #B8822F; }
+  .audit-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  .audit-hint { text-align: center; color: #8B9A8F; font-size: 12px; margin-top: 10px; }
+  .audit-formerror { color: #A6432E; font-size: 13px; margin-top: 12px; text-align: center; }
+  #audit-thankyou p { color: #2E4B3F; font-weight: 700; font-size: 17px; line-height: 1.6; text-align: center; }
+
+  .skip-link {
+    position: absolute; left: 1rem; top: -3rem;
+    background: #2E4B3F; color: #F5F1E8; padding: 0.6rem 1rem; border-radius: 8px;
+    font-weight: 600; font-size: 0.9rem; z-index: 100;
+    transition: top 0.2s ease;
+  }
+  .skip-link:focus { top: 1rem; }
+
+  #cookie-banner {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    background: #1F3A2E; color: #F5F1E8;
+  }
+
+  /* "For agencies" button: deep green fill so it reads as a different product next to the honey primary button */
+  .btn-agency {
+    background: #1F3A2E; color: #F5F1E8; border: 1.5px solid #1F3A2E;
+    transition: transform 0.2s ease-out, background-color 0.2s ease-out;
+  }
+  .btn-agency:hover { background: #2E4B3F; transform: translateY(-2px); }
+  .btn-agency:active { transform: translateY(0); }
+  .btn-agency:focus-visible { outline: 2px solid #CF9640; outline-offset: 3px; }
+
+  /* current page in the nav */
+  .nav-link[aria-current="page"] { font-weight: 700; }
+  .nav-link[aria-current="page"]::after { transform: scaleX(1); }
+  #mobile-menu a[aria-current="page"] { color: #1B2620; text-decoration: underline; text-decoration-color: #CF9640; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+  #menu-toggle:focus-visible { outline: 2px solid #CF9640; outline-offset: 3px; }
+
+  /* the scrolling strip pauses when it is off screen */
+  .marquee-track.paused { animation-play-state: paused; }

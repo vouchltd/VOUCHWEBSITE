@@ -43,6 +43,11 @@ Google API status pending. Contact email `vouchsocal@gmail.com`. Lens and Ladder
    new files in `brand_assets/`; the `agencies/` and `agencies-src/` folders; this `docs/` folder.
 4. The portal (`/portal/*`, a live Supabase app) and `supabase/` are untouched. Privacy and Terms are the old pages.
 5. The old branch `claude/agency-site-rebuild` is superseded. Do not merge it again.
+6. PR 2 was merged on 2026-10-13. The next change (2026-10-14) made the **main site multi-page** like `/agencies`: the old single page was split into
+   `/`, `/services`, `/how-it-works`, `/pricing`, `/faq` and `/audit` (generated from `site-src/`), with the section markup kept as it was.
+   It also made the "For agencies" entry point far more visible: a top bar on every main page, a filled deep-green button in the desktop header,
+   and the first item in a new mobile menu (the original site had no mobile navigation below 768px). The agency pages got a matching bar pointing business owners back.
+   The audit form, Formspree endpoint, cookie notice and old `#hash` links all still work.
 
 ## Open items
 See `docs/agencies-placeholders.md`.
@@ -52,4 +57,4 @@ See `docs/agencies-placeholders.md`.
 - Full-page screenshots need a scroll-through first, because reveal animations hide content until JS adds `.is-visible`.
 
 ## How to work on it
-Main site: edit the root HTML files directly (Tailwind via CDN, as before). Agency pages: see `agencies-src/README.md`.
+Main site: see `site-src/README.md`. Agency pages: see `agencies-src/README.md`.
