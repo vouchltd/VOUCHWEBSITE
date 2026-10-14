@@ -20,7 +20,7 @@ function headTags(attrs) {
   <meta name="description" content="${esc(a.desc)}">
   <link rel="canonical" href="${url}">
   <meta name="theme-color" content="#2D5F3F">
-  <link rel="icon" type="image/png" href="/brand_assets/favicon.png">
+  <link rel="icon" type="image/png" href="/brand_assets/favicon-64.png">
   <link rel="apple-touch-icon" href="/brand_assets/apple-touch-icon.png">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Vouch SoCal">

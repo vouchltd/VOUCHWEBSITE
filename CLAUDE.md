@@ -2,11 +2,12 @@
 
 Read `docs/PROJECT_CONTEXT.md` first (business, decisions, history, open items).
 
-## Two parts
-- **Main site** (root `index.html`, `portal/`, `privacy-policy.html`, `terms.html`): the original direct-to-business service. Hand-written static HTML with Tailwind via CDN. Edit directly. The portal is a live Supabase app, so do not touch it casually, and never touch `supabase/` unless asked.
-- **Agency product** (`/agencies`): generated static pages. Edit `agencies-src/`, run `node agencies-src/build.mjs`, commit both. Never hand-edit `/agencies`.
+## Two parts, both generated static HTML (no build step on Vercel)
+- **Main site** (`/`, `/services`, `/how-it-works`, `/pricing`, `/faq`, `/audit`): edit `site-src/`, run `node site-src/build.mjs`, commit both. Styled with Tailwind via CDN plus `site-src/assets/site.css`. Never hand-edit the generated root pages.
+- **Agency product** (`/agencies/*`): edit `agencies-src/`, run `node agencies-src/build.mjs`, commit both. Never hand-edit `/agencies`.
+- **Left alone:** `portal/` (a live Supabase app), `supabase/`, `privacy-policy.html`, `terms.html`. Do not touch them casually.
 
-## Hard rules for the agency pages (and any new copy)
+## Hard rules for the agency pages (and any new copy anywhere)
 - No em dashes in copy. Avoid "seamless", "leverage", "unlock", "elevate", "game-changer", "in today's fast-paced world", and "no card, no catch" slogans.
 - No fake testimonials, client logos, case studies, user counts or results. Mockups say "Illustrative example" with fictional businesses.
 - Only two stats may appear, each with its source line (see `docs/PROJECT_CONTEXT.md`). Never promise ratings, rankings or revenue.

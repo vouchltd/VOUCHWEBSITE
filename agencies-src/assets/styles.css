@@ -67,6 +67,13 @@ a:hover { color: var(--forest); }
 .eyebrow-clay { color: var(--clay); }
 .on-dark .eyebrow { color: var(--mist); }
 
+/* Audience bar: points business owners back to the main service */
+.audience-bar { background: var(--deep); color: var(--oat); font-size: 0.875rem; }
+.audience-bar-inner { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.15rem 0.75rem; padding-top: 0.6rem; padding-bottom: 0.6rem; text-align: center; }
+.audience-bar-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; color: var(--honey); }
+.audience-bar a { color: var(--oat); font-weight: 600; text-decoration: underline; text-decoration-color: var(--honey); text-underline-offset: 4px; }
+.audience-bar a:hover { color: var(--honey); }
+
 /* Header */
 .site-header { position: sticky; top: 0; z-index: 50; background: rgba(245, 241, 232, 0.92); backdrop-filter: blur(4px); border-bottom: 1px solid var(--line); }
 .header-inner { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 1.5rem; padding-top: 0.6rem; padding-bottom: 0.6rem; }
